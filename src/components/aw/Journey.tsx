@@ -45,7 +45,7 @@ export function Journey() {
   const activeIndex = Math.min(STAGES.length - 1, Math.floor(progress * STAGES.length * 0.999));
 
   return (
-    <section ref={ref} className="relative bg-navy" style={{ height: `${STAGES.length * 100}vh` }}>
+    <section id="track" ref={ref} className="relative bg-navy" style={{ height: `${STAGES.length * 100}vh` }}>
       <div className="sticky top-0 min-h-[100svh] overflow-hidden">
         <div className="mx-auto flex min-h-[100svh] max-w-[1600px] flex-col px-6 py-24 md:px-10">
           <SectionLabel index="04 /" label="One Seamless Journey" className="text-on-navy" />

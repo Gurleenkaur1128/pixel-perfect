@@ -37,8 +37,8 @@ export function Hero() {
           className="drift h-full w-full object-cover"
           style={{ transform: `translate3d(0, ${y * 0.12}px, 0)` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/55 to-navy/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_100%,transparent,color-mix(in_oklab,var(--navy)_85%,transparent))]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/35 to-navy/40" />
+        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_100%,transparent,color-mix(in_oklab,var(--navy)_55%,transparent))]" />
       </div>
 
       <div className="mx-auto flex min-h-[100svh] max-w-[1600px] flex-col justify-end px-6 pb-16 pt-32 md:px-10 md:pb-20">
