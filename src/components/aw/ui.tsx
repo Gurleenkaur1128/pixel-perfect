@@ -1,3 +1,4 @@
+import type React from "react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -41,13 +42,14 @@ export function SectionLabel({
   index,
   label,
   className,
+  ...rest
 }: {
   index: string;
   label: string;
   className?: string;
-}) {
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "className"> & { "data-reveal"?: boolean }) {
   return (
-    <div className={cn("flex items-center gap-4", className)}>
+    <div className={cn("flex items-center gap-4", className)} {...rest}>
       <span className="eyebrow text-primary">{index}</span>
       <span className="h-px w-10 bg-current opacity-25" />
       <span className="eyebrow opacity-60">{label}</span>
