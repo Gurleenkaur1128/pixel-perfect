@@ -14,23 +14,23 @@ export function BlanketWrap() {
   const { ref, inView } = useInView<HTMLDivElement>(0.3);
 
   return (
-    <section className="section-y relative overflow-hidden bg-navy text-on-navy">
+    <section className="section-y relative overflow-hidden bg-primary text-on-navy">
       <div className="container-aw">
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
           <div>
             <SectionLabel index="02 /" label="Blanket Wrap" />
-            <h2 className="display h-section mt-7">
+            <h2 className="display h-section mt-5">
               Protecting your brand with <span className="text-route">blanket wrap</span>
             </h2>
           </div>
-          <p className="max-w-md text-base leading-relaxed text-on-navy/75 md:text-lg lg:justify-self-end">
+          <p className="body-copy max-w-md text-on-navy/75 lg:justify-self-end">
             Our skilled associates handle every piece of furniture as if it is going into their own
             home &mdash; so it arrives without damage, keeping you and your customers happy.
           </p>
         </div>
 
-        <div ref={ref} className="relative mt-14 lg:mt-20">
-          <div className="relative mx-auto aspect-[4/3] w-full max-w-[640px] overflow-hidden rounded-sm lg:aspect-square lg:max-w-[520px]">
+        <div ref={ref} className="relative mt-10 lg:mt-14">
+          <div className="relative mx-auto aspect-square w-full max-w-[340px] overflow-hidden rounded-sm sm:max-w-[400px] lg:max-w-[420px]">
             <img
               src={blanket}
               alt="Armchair wrapped in blue moving blankets"

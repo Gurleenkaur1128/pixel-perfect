@@ -10,13 +10,13 @@ export function WestWay() {
 
   return (
     <section id="about" ref={root} className="section-y overflow-hidden bg-background">
-      <div className="container-aw grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20">
+      <div className="container-aw grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.9fr)] lg:gap-14">
         <div>
           <SectionLabel index="01 /" label="The American West Way" className="reveal text-ink" data-reveal />
-          <h2 className="display h-section reveal mt-7 text-primary" data-reveal data-reveal-delay="120">
+          <h2 className="display h-section reveal mt-5 text-primary" data-reveal data-reveal-delay="120">
             Your business is anything <span className="text-route">but</span> average
           </h2>
-          <p className="reveal mt-7 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg" data-reveal data-reveal-delay="240">
+          <p className="body-copy reveal mt-5 max-w-lg text-muted-foreground" data-reveal data-reveal-delay="240">
             Your business is unique. Whether you ship to a store, a showroom, a distribution center,
             a manufacturer or a final-mile home delivery, American West handles the specialized
             transportation behind every channel.
@@ -55,18 +55,18 @@ export function WestWay() {
           </div>
         </div>
 
-        <div className="reveal-mask relative aspect-[4/5] overflow-hidden rounded-sm lg:aspect-[5/6]" data-reveal>
+        <div className="reveal-mask relative mx-auto aspect-[4/3] w-full max-w-[560px] overflow-hidden rounded-sm lg:max-h-[560px] lg:max-w-none" data-reveal>
           <img
             src={delivery}
             alt="American West specialists carrying a sofa into a home"
             loading="lazy"
-            width={1280}
-            height={1600}
-            className="h-full w-full object-cover"
+            width={1600}
+            height={1008}
+            className="h-full max-h-[620px] w-full object-cover"
           />
-          <div className="absolute bottom-0 left-0 bg-primary px-6 py-5 text-on-navy">
+          <div className="absolute bottom-0 left-0 bg-primary px-5 py-4 text-on-navy">
             <p className="eyebrow text-on-navy/70">Multi-channel fulfillment</p>
-            <p className="display mt-2 text-2xl">Store to doorstep.</p>
+            <p className="display mt-1.5 text-xl">Store to doorstep.</p>
           </div>
         </div>
       </div>

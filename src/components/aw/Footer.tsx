@@ -9,19 +9,19 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-navy-deep pb-10 pt-20 text-on-navy">
+    <footer className="relative overflow-hidden bg-navy-deep pb-8 pt-14 text-on-navy">
       <span className="display pointer-events-none absolute inset-x-0 bottom-2 select-none whitespace-nowrap text-center text-[11vw] leading-none text-on-navy/[0.04]">
         American West
       </span>
       <div className="container-aw relative">
-        <div className="flex flex-wrap items-end justify-between gap-8 border-b border-on-navy/10 pb-12">
-          <Logo className="h-16" />
+        <div className="flex flex-wrap items-end justify-between gap-8 border-b border-on-navy/10 pb-8">
+          <Logo className="w-[140px] rounded-sm bg-white px-2 py-1 sm:w-[156px]" />
           <p className="max-w-xs text-sm leading-relaxed text-on-navy/60">
             Specialized furniture transportation, warehousing and final-mile delivery across the
             United States.
           </p>
         </div>
-        <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <p className="eyebrow text-route">{col.title}</p>
