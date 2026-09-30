@@ -39,10 +39,10 @@ function Index() {
       <WestWay />
       <NetworkMap />
       <Journey />
-      <div className="hidden lg:block">
+      <div className="hidden md:block">
         <Services />
       </div>
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <ServicesMobile />
       </div>
       <Furniture />
