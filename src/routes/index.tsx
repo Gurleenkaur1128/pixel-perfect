@@ -1,21 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { BrandPromise } from "@/components/aw/BrandPromise";
+import { BlanketWrap } from "@/components/aw/BlanketWrap";
 import { Careers } from "@/components/aw/Careers";
+import { Excellence } from "@/components/aw/Excellence";
 import { FinalCta } from "@/components/aw/FinalCta";
 import { Footer } from "@/components/aw/Footer";
-import { Furniture } from "@/components/aw/Furniture";
 import { Hero } from "@/components/aw/Hero";
-import { Journey } from "@/components/aw/Journey";
 import { Nav } from "@/components/aw/Nav";
 import { NetworkMap } from "@/components/aw/NetworkMap";
-import { Services, ServicesMobile } from "@/components/aw/Services";
+import { ServiceModes } from "@/components/aw/ServiceModes";
 import { Stats } from "@/components/aw/Stats";
 import { WestWay } from "@/components/aw/WestWay";
 
 const TITLE = "American West — Nationwide Furniture Logistics";
 const DESC =
-  "Specialized furniture transportation and final-mile logistics built around your reputation. Coast-to-coast network, white-glove care.";
+  "Specialized furniture transportation and final-mile logistics built around your reputation. Blanket wrap, warehousing and nationwide delivery.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,17 +36,11 @@ function Index() {
       <Nav />
       <Hero />
       <WestWay />
+      <BlanketWrap />
       <NetworkMap />
-      <Journey />
-      <div className="hidden md:block">
-        <Services />
-      </div>
-      <div className="md:hidden">
-        <ServicesMobile />
-      </div>
-      <Furniture />
+      <ServiceModes />
+      <Excellence />
       <Stats />
-      <BrandPromise />
       <Careers />
       <FinalCta />
       <Footer />
