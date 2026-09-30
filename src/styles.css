@@ -236,10 +236,6 @@
   transition: transform 0.6s var(--ease-premium);
 }
 
-@utility group-hover-arrow {
-  /* placeholder utility so arrow classes stay in the design system */
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
