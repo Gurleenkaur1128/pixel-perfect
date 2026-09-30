@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import videoAsset from "@/assets/hero-truck.mp4.asset.json";
 import heroPoster from "@/assets/hero-highway.jpg";
 import { AwButton } from "@/components/aw/ui";
 import { cn } from "@/lib/utils";
@@ -35,8 +34,8 @@ export function Hero() {
     <section id="top" className="relative isolate min-h-[100svh] overflow-hidden bg-navy-deep">
       <div className="absolute inset-0 -z-10">
         <video
-          className="h-full w-full object-cover object-[65%_center]"
-          src={videoAsset.url}
+          className="h-full w-full object-cover object-[68%_center]"
+          src="/brand/hero-truck.mp4"
           poster={heroPoster}
           autoPlay
           muted
@@ -45,17 +44,18 @@ export function Hero() {
           preload="auto"
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,26,60,0.92)_0%,rgba(9,26,60,0.72)_30%,rgba(9,26,60,0.30)_58%,rgba(9,26,60,0.05)_100%)] max-md:bg-[linear-gradient(90deg,rgba(9,26,60,0.9)_0%,rgba(9,26,60,0.6)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(9,26,60,0.70)_0%,transparent_45%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,38,96,0.94)_0%,rgba(20,38,96,0.76)_30%,rgba(20,38,96,0.32)_58%,rgba(20,38,96,0.06)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(20,38,96,0.55)_0%,transparent_45%)]" />
       </div>
 
-      <div className="container-aw flex min-h-[100svh] flex-col justify-center pb-40 pt-32 md:pb-44">
+      <div className="container-aw flex min-h-[100svh] flex-col justify-center pb-24 pt-28 max-[840px]:pb-16 max-[840px]:pt-24">
+        <div className="max-w-[560px]">
         <div className={cn("eyebrow flex items-center gap-4 text-on-navy/80", fade(1))}>
           <span className="h-px w-10 bg-route" />
           Specialized furniture transportation
         </div>
 
-        <h1 className="display h-hero mt-7 max-w-[620px] text-on-navy">
+        <h1 className="display h-hero mt-5 max-w-[560px] text-on-navy">
           {["Delivering", "on your", "Promises"].map((line, i) => (
             <span key={line} className="block overflow-hidden pb-1">
               <span
@@ -71,23 +71,24 @@ export function Hero() {
           ))}
         </h1>
 
-        <p className={cn("mt-7 max-w-[520px] text-base leading-relaxed text-on-navy/85 md:text-lg", fade(4))}>
+        <p className={cn("body-copy mt-5 max-w-[460px] text-on-navy/85", fade(4))}>
           Specialized furniture transportation and final-mile logistics built around your
           reputation.
         </p>
 
-        <div className={cn("mt-9 flex flex-wrap gap-4", fade(5))}>
+        <div className={cn("mt-7 flex flex-wrap gap-3", fade(5))}>
           <AwButton href="#quote">Request a Quote</AwButton>
           <AwButton href="#track" tone="ghost-light" arrow="↗">
             Track Shipment
           </AwButton>
         </div>
+        </div>
       </div>
 
       {/* Signature route line — static, no truck */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-8">
+      <div className="pointer-events-none absolute inset-x-0 bottom-2">
         <div className="container-aw relative">
-          <div className="relative hidden h-[90px] md:block">
+          <div className="relative hidden h-[4.75rem] md:block">
             <svg viewBox="0 0 1200 110" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
               <path
                 d={ROUTE}
@@ -108,7 +109,7 @@ export function Hero() {
               <div
                 key={c.name}
                 className={cn("absolute top-0 -translate-x-1/2 transition-opacity duration-1000", on(5) ? "opacity-100" : "opacity-0")}
-                style={{ left: `${c.x}%`, top: i % 2 ? "72%" : "40%", transitionDelay: `${500 + i * 250}ms` }}
+                style={{ left: `${c.x}%`, top: i % 2 ? "46%" : "8%", transitionDelay: `${500 + i * 250}ms` }}
               >
                 <span className="mx-auto block h-2 w-2 rounded-full bg-route ring-4 ring-route/20" />
                 <span className="mt-2.5 block whitespace-nowrap text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-on-navy/60">

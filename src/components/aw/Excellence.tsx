@@ -29,24 +29,24 @@ export function Excellence() {
   const root = useRevealRoot<HTMLElement>();
   return (
     <section ref={root} className="section-y bg-background">
-      <div className="container-aw space-y-20 lg:space-y-28">
+      <div className="container-aw space-y-16 lg:space-y-[5.25rem]">
         {ROWS.map((r, i) => {
           const flip = i % 2 === 1;
           return (
             <div key={r.t} className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
               <div className={cn("lg:col-span-5", flip ? "lg:order-2 lg:col-start-8" : "lg:col-start-1")}>
                 <p className="reveal display text-sm text-route" data-reveal>0{i + 1}</p>
-                <h3 className="display reveal mt-4 text-[clamp(1.875rem,3vw,2.625rem)] text-primary" data-reveal>
+                <h3 className="display reveal mt-3 text-[clamp(32px,3vw,44px)] leading-[0.98] text-primary" data-reveal>
                   {r.t}
                 </h3>
                 <span className="reveal mt-6 block h-0.5 w-14 bg-route" data-reveal />
-                <p className="reveal mt-6 max-w-md text-base leading-relaxed text-muted-foreground md:text-lg" data-reveal>
+                <p className="body-copy reveal mt-5 max-w-md text-muted-foreground" data-reveal>
                   {r.d}
                 </p>
               </div>
               <div
                 className={cn(
-                  "reveal-mask aspect-[16/10] overflow-hidden rounded-sm lg:col-span-6",
+                  "reveal-mask h-[260px] overflow-hidden rounded-sm sm:h-[340px] lg:col-span-6 lg:h-[440px]",
                   flip ? "lg:order-1 lg:col-start-1" : "lg:col-start-7",
                 )}
                 data-reveal

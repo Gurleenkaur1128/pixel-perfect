@@ -4,21 +4,21 @@ import { useInView } from "@/hooks/use-reveal";
 export function FinalCta() {
   const { ref, inView } = useInView<HTMLDivElement>(0.35);
   return (
-    <section id="quote" className="section-y relative overflow-hidden bg-warm">
+    <section id="quote" className="relative flex min-h-[68vh] items-center overflow-hidden bg-warm py-16">
       <div ref={ref} className="container-aw relative text-center">
-        <p className="eyebrow text-route">08 / Get started</p>
-        <h2 className="display h-section mt-6 text-primary">Ready to move?</h2>
-        <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-muted-foreground md:text-lg">
+        <p className="eyebrow text-route">07 / Get started</p>
+        <h2 className="display h-section mt-4 text-primary">Ready to move?</h2>
+        <p className="body-copy mx-auto mt-4 max-w-md text-muted-foreground">
           Let&rsquo;s build a smarter transportation and delivery program.
         </p>
-        <div id="track" className="mt-9 flex flex-wrap justify-center gap-4">
+        <div id="track" className="mt-7 flex flex-wrap justify-center gap-3">
           <AwButton>Request a Quote</AwButton>
           <AwButton tone="ghost-dark" arrow="↗" href="#track">
             Track Shipment
           </AwButton>
         </div>
 
-        <div className="relative mx-auto mt-16 h-24 max-w-3xl">
+        <div className="relative mx-auto mt-10 h-20 max-w-3xl">
           <svg viewBox="0 0 800 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden="true">
             <path
               d="M 0 20 C 200 20 260 80 400 80"
@@ -32,7 +32,7 @@ export function FinalCta() {
           </svg>
           <span
             className="absolute left-1/2 top-[80%] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-route transition-opacity duration-700"
-            style={{ opacity: inView ? 1 : 0, transitionDelay: "1600ms", animation: inView ? "hub-pulse-dot 2.8s ease-out infinite 2s" : undefined }}
+            style={{ opacity: inView ? 1 : 0, transitionDelay: "1600ms", animation: inView ? "hub-pulse 2.8s ease-out infinite 2s" : undefined }}
           />
         </div>
         <p

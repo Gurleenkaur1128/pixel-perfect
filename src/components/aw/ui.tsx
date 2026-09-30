@@ -1,7 +1,6 @@
 import type React from "react";
 import type { ReactNode } from "react";
 
-import logoAsset from "@/assets/aw-logo.png.asset.json";
 import { cn } from "@/lib/utils";
 
 type Tone = "orange" | "blue" | "ghost-light" | "ghost-dark";
@@ -29,7 +28,7 @@ export function AwButton({
     <a
       href={href}
       className={cn(
-        "group inline-flex items-center gap-3 rounded-sm px-7 py-4 text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-500",
+        "group inline-flex items-center gap-2.5 rounded-sm px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-500",
         tones[tone],
         className,
       )}
@@ -61,14 +60,12 @@ export function SectionLabel({
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center rounded-sm bg-on-navy px-2.5 py-1.5", className)}>
-      <img
-        src={logoAsset.url}
-        alt="American West Worldwide Express, Inc."
-        width={606}
-        height={309}
-        className="h-full w-auto"
-      />
-    </span>
+    <img
+      src="/brand/aw-logo.png"
+      alt="American West Worldwide Express, Inc."
+      width={546}
+      height={273}
+      className={cn("h-auto w-[128px] bg-transparent sm:w-[164px]", className)}
+    />
   );
 }

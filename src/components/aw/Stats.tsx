@@ -20,16 +20,15 @@ export function Stats() {
   }, [inView]);
 
   return (
-    <section className="bg-primary py-20 text-on-navy lg:py-24">
-      <div ref={ref} className="container-aw flex flex-wrap items-end justify-between gap-8">
-        <p className="display text-[clamp(4.5rem,11vw,9rem)] leading-[0.85]">
+    <section className="bg-primary py-14 text-on-navy lg:py-16">
+      <div ref={ref} className="container-aw flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+        <p className="display text-[clamp(64px,8vw,110px)] leading-none">
           {n}
           <span className="text-route">+</span>
-          <span className="ml-4 align-top text-[0.35em]">Years</span>
         </p>
         <div className="max-w-sm">
-          <p className="eyebrow text-route">Combined delivery experience</p>
-          <p className="mt-3 text-base leading-relaxed text-on-navy/80">
+          <p className="display text-[clamp(18px,2vw,28px)] leading-tight">Combined delivery experience</p>
+          <p className="mt-3 text-[15px] leading-relaxed text-on-navy/80">
             From our family of specialized furniture carriers &mdash; one solid reputation for
             delivery success.
           </p>

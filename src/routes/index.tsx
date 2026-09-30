@@ -6,6 +6,7 @@ import { Excellence } from "@/components/aw/Excellence";
 import { FinalCta } from "@/components/aw/FinalCta";
 import { Footer } from "@/components/aw/Footer";
 import { Hero } from "@/components/aw/Hero";
+import { Journey } from "@/components/aw/Journey";
 import { Nav } from "@/components/aw/Nav";
 import { NetworkMap } from "@/components/aw/NetworkMap";
 import { ServiceModes } from "@/components/aw/ServiceModes";
@@ -38,9 +39,10 @@ function Index() {
       <WestWay />
       <BlanketWrap />
       <NetworkMap />
-      <ServiceModes />
+      <Journey />
       <Excellence />
       <Stats />
+      <ServiceModes />
       <Careers />
       <FinalCta />
       <Footer />

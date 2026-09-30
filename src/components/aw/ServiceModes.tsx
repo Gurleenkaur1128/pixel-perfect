@@ -12,22 +12,22 @@ export function ServiceModes() {
   const root = useRevealRoot<HTMLElement>();
   return (
     <section ref={root} className="section-y bg-warm">
-      <div className="container-aw grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
-        <div className="reveal-mask aspect-[4/3] overflow-hidden rounded-sm" data-reveal>
+      <div className="container-aw grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="reveal-mask h-[240px] overflow-hidden rounded-sm sm:h-[320px] lg:h-[400px]" data-reveal>
           <img src={finalMile} alt="Furniture delivered into a sunlit living room" loading="lazy" className="h-full w-full object-cover" />
         </div>
         <div>
           <SectionLabel index="05 /" label="E-commerce / Final Mile" className="reveal text-ink" data-reveal />
-          <h2 className="display reveal mt-6 text-[clamp(2rem,3.4vw,2.75rem)] text-primary" data-reveal>
+          <h2 className="display h-sub reveal mt-4 leading-[0.98] text-primary" data-reveal>
             Your reputation is on the line with every delivery
           </h2>
-          <p className="reveal mt-5 max-w-lg text-base leading-relaxed text-muted-foreground" data-reveal>
+          <p className="body-copy reveal mt-4 max-w-lg text-muted-foreground" data-reveal>
             Your customers depend on you for a quality product and a seamless delivery. American
             West helps complete the order fulfillment process.
           </p>
-          <ul className="mt-9 border-t border-border">
+          <ul className="mt-6 border-t border-border">
             {MODES.map((m, i) => (
-              <li key={m.name} className="reveal flex gap-6 border-b border-border py-5" data-reveal data-reveal-delay={i * 120}>
+              <li key={m.name} className="reveal flex gap-5 border-b border-border py-4" data-reveal data-reveal-delay={i * 120}>
                 <span className="display pt-0.5 text-sm text-route">0{i + 1}</span>
                 <div>
                   <p className="display text-lg text-ink">{m.name}</p>

@@ -37,9 +37,9 @@ const ROUTES = [
   { d: arc("Los Angeles", "Dallas"), c: "var(--route)", dur: 7 },
   { d: arc("Dallas", "Atlanta"), c: "var(--route)", dur: 6 },
   { d: arc("Atlanta", "New York"), c: "var(--route)", dur: 6 },
-  { d: arc("Los Angeles", "Chicago", 0.18), c: "var(--steel)", dur: 10 },
-  { d: arc("Chicago", "New York"), c: "var(--steel)", dur: 6 },
-  { d: arc("Dallas", "Chicago", 0.2), c: "var(--steel)", dur: 7 },
+  { d: arc("Los Angeles", "Chicago", 0.18), c: "rgba(255,255,255,0.45)", dur: 10 },
+  { d: arc("Chicago", "New York"), c: "rgba(255,255,255,0.45)", dur: 6 },
+  { d: arc("Dallas", "Chicago", 0.2), c: "rgba(255,255,255,0.45)", dur: 7 },
 ];
 
 const STATS = [
@@ -48,40 +48,83 @@ const STATS = [
   { v: "Furniture", l: "Specialized delivery" },
 ];
 
+function MapTruck({ href, dur, begin }: { href: string; dur: number; begin: number }) {
+  return (
+    <g>
+      <animateMotion dur={`${dur}s`} begin={`${begin}s`} rotate="auto" repeatCount="indefinite">
+        <mpath href={href} />
+      </animateMotion>
+      <g transform="scale(1.45)">
+        <rect x="-16" y="-5" width="20" height="10" rx="1" fill="#ffffff" stroke="#2D419A" strokeWidth="0.8" />
+        <rect x="-16" y="-0.8" width="20" height="2" fill="#F3692B" />
+        <path d="M4 -4 H10 L14.5 0 V5 H4 Z" fill="#2D419A" />
+        <rect x="9" y="-2.6" width="3" height="2.4" fill="#E7ECFA" />
+        <circle cx="-8" cy="5.2" r="1.5" fill="#142660" />
+        <circle cx="1.5" cy="5.2" r="1.5" fill="#142660" />
+        <circle cx="11" cy="5.2" r="1.5" fill="#142660" />
+      </g>
+    </g>
+  );
+}
+
 export function NetworkMap() {
   const { ref, inView } = useInView<HTMLDivElement>(0.2);
 
   return (
-    <section id="network" className="relative overflow-hidden bg-navy-deep py-20 text-on-navy lg:py-24">
+    <section id="network" className="relative overflow-hidden bg-navy py-16 text-on-navy lg:py-20">
       <div className="container-aw">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-end">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
           <div>
-            <SectionLabel index="04 /" label="Nationwide" />
-            <h2 className="display h-section mt-6">
+            <SectionLabel index="03 /" label="Nationwide" />
+            <h2 className="display h-section mt-5">
               Nationwide delivery <span className="text-route">success</span>
             </h2>
           </div>
-          <p className="max-w-sm text-base leading-relaxed text-on-navy/70">
+          <p className="body-copy max-w-sm text-on-navy/70">
             Specialized furniture transportation and final-mile coverage across the continental
             United States.
           </p>
         </div>
 
-        <div ref={ref} className="relative mx-auto mt-10 w-full max-w-[920px]">
+        <div ref={ref} className="relative mx-auto mt-8 w-full max-w-[800px]">
           <svg viewBox="0 0 975 610" className="h-auto w-full" role="img" aria-label="Map of the continental United States with American West delivery routes">
-            <path d={NATION} fill="var(--navy)" stroke="color-mix(in oklab, var(--steel) 40%, transparent)" strokeWidth="1" />
-            <path d={BORDERS} fill="none" stroke="color-mix(in oklab, var(--steel) 18%, transparent)" strokeWidth="0.6" />
+            <defs>
+              <filter id="aw-route-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.2" />
+              </filter>
+            </defs>
+            <path d={NATION} fill="color-mix(in srgb, var(--blue) 72%, var(--navy))" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
+            <path d={BORDERS} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="0.6" />
 
-            {ROUTES.map((r, i) => (
+            {ROUTES.map((r, i) => {
+              const active = i < 3;
+              return (
               <g key={i}>
+                {active && (
+                  <path
+                    d={r.d}
+                    fill="none"
+                    stroke="#F3692B"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    opacity={inView ? 0.4 : 0}
+                    filter="url(#aw-route-glow)"
+                    pathLength={1}
+                    style={{
+                      strokeDasharray: 1,
+                      strokeDashoffset: inView ? 0 : 1,
+                      transition: `stroke-dashoffset 1800ms cubic-bezier(0.16,1,0.3,1) ${500 + i * 200}ms, opacity 800ms ease`,
+                    }}
+                  />
+                )}
                 <path
                   id={`nr-${i}`}
                   d={r.d}
                   fill="none"
                   stroke={r.c}
-                  strokeWidth="1.8"
+                  strokeWidth={active ? 2.1 : 1.3}
                   strokeLinecap="round"
-                  opacity={0.85}
+                  opacity={0.9}
                   pathLength={1}
                   style={{
                     strokeDasharray: 1,
@@ -89,15 +132,9 @@ export function NetworkMap() {
                     transition: `stroke-dashoffset 1800ms cubic-bezier(0.16,1,0.3,1) ${500 + i * 200}ms`,
                   }}
                 />
-                {inView && (
-                  <circle r="3.2" fill="var(--on-navy)">
-                    <animateMotion dur={`${r.dur}s`} begin={`${2 + i * 0.4}s`} repeatCount="indefinite">
-                      <mpath href={`#nr-${i}`} />
-                    </animateMotion>
-                  </circle>
-                )}
+                {inView && active && <MapTruck href={`#nr-${i}`} dur={r.dur} begin={1.6 + i * 0.45} />}
               </g>
-            ))}
+            );})}
 
             {CITIES.map((c, i) => (
               <g key={c.name} style={{ opacity: inView ? 1 : 0, transition: `opacity 900ms ease ${300 + i * 150}ms` }}>
@@ -114,7 +151,7 @@ export function NetworkMap() {
                   y={c.y + (c.name === "Chicago" || c.name === "New York" ? -16 : 24)}
                   textAnchor="middle"
                   fill="var(--on-navy)"
-                  style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
+                  style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
                 >
                   {c.name}
                 </text>
