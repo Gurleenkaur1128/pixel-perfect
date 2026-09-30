@@ -19,8 +19,8 @@
   --radius-3xl: 12px;
   --radius-4xl: 16px;
 
-  --font-display: "Anton", "Arial Narrow", sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Archivo", "Arial", sans-serif;
+  --font-sans: "Figtree", system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -44,43 +44,50 @@
 
   --color-navy: var(--navy);
   --color-navy-soft: var(--navy-soft);
+  --color-navy-deep: var(--navy-deep);
+  --color-blue: var(--blue);
   --color-warm: var(--warm);
   --color-steel: var(--steel);
   --color-route: var(--route);
   --color-on-navy: var(--on-navy);
+  --color-ink: var(--ink);
 
   --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* American West Worldwide Express brand: blue #29449B, navy #162D6A, orange #F26522 */
 :root {
   --radius: 3px;
 
-  --navy: oklch(0.192 0.026 244);
-  --navy-soft: oklch(0.235 0.018 244);
-  --warm: oklch(0.958 0.013 86);
-  --steel: oklch(0.742 0.012 244);
-  --route: oklch(0.523 0.193 27.5);
-  --on-navy: oklch(0.985 0.002 250);
+  --blue: #29449b;
+  --navy: #162d6a;
+  --navy-soft: #1e3a80;
+  --navy-deep: #091a3c;
+  --warm: #f4f6fa;
+  --steel: #b9c3d9;
+  --route: #f26522;
+  --on-navy: #ffffff;
+  --ink: #172033;
 
-  --background: var(--warm);
-  --foreground: var(--navy);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--navy);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--navy);
-  --primary: var(--route);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: var(--navy);
-  --secondary-foreground: var(--on-navy);
-  --muted: oklch(0.925 0.01 86);
-  --muted-foreground: oklch(0.523 0.015 244);
+  --background: #ffffff;
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--blue);
+  --primary-foreground: #ffffff;
+  --secondary: var(--warm);
+  --secondary-foreground: var(--ink);
+  --muted: var(--warm);
+  --muted-foreground: #5a6480;
   --accent: var(--route);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.87 0.008 86);
-  --input: oklch(0.87 0.008 86);
-  --ring: var(--route);
+  --accent-foreground: #ffffff;
+  --destructive: #c62828;
+  --destructive-foreground: #ffffff;
+  --border: #dde2ee;
+  --input: #dde2ee;
+  --ring: var(--blue);
 }
 
 .dark {
@@ -124,17 +131,17 @@
 
 @utility display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 800;
   text-transform: uppercase;
-  line-height: 0.86;
-  letter-spacing: -0.015em;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
 }
 
 @utility eyebrow {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.24em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
@@ -229,6 +236,31 @@
 
 @utility drift {
   animation: slow-drift 24s var(--ease-premium) infinite alternate;
+}
+
+@utility container-aw {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (min-width: 768px) {
+    padding-inline: 2.5rem;
+  }
+}
+
+@utility h-hero {
+  font-size: clamp(3.625rem, 6vw, 6rem);
+}
+
+@utility h-section {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+@utility section-y {
+  padding-block: 5.5rem;
+  @media (min-width: 1024px) {
+    padding-block: 7.5rem;
+  }
 }
 
 @utility arrow-slide {

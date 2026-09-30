@@ -1,83 +1,38 @@
 import { useEffect, useState } from "react";
 
-import warehouse from "@/assets/warehouse.jpg";
-import { SectionLabel } from "@/components/aw/ui";
 import { useInView } from "@/hooks/use-reveal";
 
-const STATS = [
-  { value: 100, suffix: "+", label: "Years of combined experience" },
-  { value: 48, suffix: "", label: "States served", placeholder: true },
-  { value: 12, suffix: "", label: "Service locations", placeholder: true },
-  { value: 250, suffix: "K+", label: "Deliveries completed", placeholder: true },
-];
-
-function Counter({ to, suffix, run }: { to: number; suffix: string; run: boolean }) {
+export function Stats() {
+  const { ref, inView } = useInView<HTMLDivElement>(0.4);
   const [n, setN] = useState(0);
 
   useEffect(() => {
-    if (!run) return;
-    const duration = 2200;
+    if (!inView) return;
+    let raf = 0;
     const start = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setN(Math.round(to * eased));
-      if (t < 1) frame = requestAnimationFrame(tick);
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / 1800);
+      setN(Math.round(100 * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [run, to]);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView]);
 
   return (
-    <span className="display text-[clamp(3.5rem,11vw,9rem)] leading-none">
-      {n}
-      <span className="text-primary">{suffix}</span>
-    </span>
-  );
-}
-
-export function Stats() {
-  const { ref, inView } = useInView<HTMLDivElement>(0.25);
-
-  return (
-    <section ref={ref} className="relative overflow-hidden bg-background py-24 md:py-32">
-      <div className="mx-auto max-w-[1600px] px-6 md:px-10">
-        <SectionLabel index="07 /" label="Experience" />
-
-        <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center">
-          <div className="divide-y divide-border">
-            {STATS.map((s) => (
-              <div
-                key={s.label}
-                className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2 py-7"
-              >
-                <Counter to={s.value} suffix={s.suffix} run={inView} />
-                <div className="pb-3 text-right">
-                  <p className="text-[0.6875rem] uppercase tracking-[0.2em] text-muted-foreground">
-                    {s.label}
-                  </p>
-                  {s.placeholder && (
-                    <p className="mt-1 text-[0.5625rem] uppercase tracking-[0.2em] text-muted-foreground/60">
-                      Indicative
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="relative aspect-[4/5] overflow-hidden bg-navy">
-            <img
-              src={warehouse}
-              alt="Furniture distribution warehouse interior"
-              loading="lazy"
-              width={1600}
-              height={1008}
-              className="drift h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-navy/25" />
-          </div>
+    <section className="bg-primary py-20 text-on-navy lg:py-24">
+      <div ref={ref} className="container-aw flex flex-wrap items-end justify-between gap-8">
+        <p className="display text-[clamp(4.5rem,11vw,9rem)] leading-[0.85]">
+          {n}
+          <span className="text-route">+</span>
+          <span className="ml-4 align-top text-[0.35em]">Years</span>
+        </p>
+        <div className="max-w-sm">
+          <p className="eyebrow text-route">Combined delivery experience</p>
+          <p className="mt-3 text-base leading-relaxed text-on-navy/80">
+            From our family of specialized furniture carriers &mdash; one solid reputation for
+            delivery success.
+          </p>
         </div>
       </div>
     </section>

@@ -1,80 +1,72 @@
-import blanketWrap from "@/assets/blanket-wrap.jpg";
+import delivery from "@/assets/delivery.jpg";
 import { SectionLabel } from "@/components/aw/ui";
-import { useSectionProgress } from "@/hooks/use-reveal";
+import { useInView, useRevealRoot } from "@/hooks/use-reveal";
+
+const STOPS = ["Store", "Showroom", "Final Mile"];
 
 export function WestWay() {
-  const { ref, progress } = useSectionProgress<HTMLDivElement>();
-
-  // Visual grows from ~38% to full-bleed as the section scrolls through.
-  const eased = Math.min(1, progress * 1.25);
-  const width = 38 + eased * 62;
-  const overlay = Math.max(0, (eased - 0.45) / 0.45);
+  const root = useRevealRoot<HTMLElement>();
+  const { ref, inView } = useInView<HTMLDivElement>(0.4);
 
   return (
-    <section id="about" ref={ref} className="relative h-[260vh] bg-background">
-      <div className="sticky top-0 flex min-h-[100svh] items-center overflow-hidden">
-        <div className="mx-auto grid w-full max-w-[1600px] gap-14 px-6 py-24 md:px-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center">
-          <div>
-            <SectionLabel index="02 /" label="The American West Way" />
-            <h2 className="display mt-8 text-[clamp(2.75rem,7vw,7rem)]">
-              The
-              <br />
-              American
-              <br />
-              West Way.
-            </h2>
-            <p className="mt-10 max-w-md text-xl leading-snug font-medium md:text-2xl">
-              Furniture isn&rsquo;t ordinary freight. So we don&rsquo;t move it like ordinary
-              freight.
-            </p>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-muted-foreground">
-              Blanket-wrap handling, forklift-free loading, dedicated distribution and a final-mile
-              network trained on high-value goods. Every piece is treated as though it were the last
-              one on the truck.
-            </p>
-            <div className="mt-10 grid max-w-md grid-cols-2 gap-x-8 gap-y-5 border-t border-border pt-8">
-              {["Blanket wrap", "Final mile", "Pool distribution", "Warehousing"].map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <span className="h-1 w-6 bg-primary" />
-                  <span className="text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground">
-                    {item}
+    <section id="about" ref={root} className="section-y overflow-hidden bg-background">
+      <div className="container-aw grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20">
+        <div>
+          <SectionLabel index="01 /" label="The American West Way" className="reveal text-ink" data-reveal />
+          <h2 className="display h-section reveal mt-7 text-primary" data-reveal data-reveal-delay="120">
+            Your business is anything <span className="text-route">but</span> average
+          </h2>
+          <p className="reveal mt-7 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg" data-reveal data-reveal-delay="240">
+            Your business is unique. Whether you ship to a store, a showroom, a distribution center,
+            a manufacturer or a final-mile home delivery, American West handles the specialized
+            transportation behind every channel.
+          </p>
+
+          <div ref={ref} className="relative mt-14 max-w-lg">
+            <svg viewBox="0 0 500 40" className="absolute inset-x-0 top-0 h-10 w-full" preserveAspectRatio="none" aria-hidden="true">
+              <path
+                d="M 8 20 C 120 4 180 36 250 20 C 320 4 380 36 492 20"
+                fill="none"
+                stroke="var(--route)"
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+                style={{
+                  strokeDasharray: 600,
+                  strokeDashoffset: inView ? 0 : 600,
+                  transition: "stroke-dashoffset 2200ms cubic-bezier(0.16,1,0.3,1)",
+                }}
+              />
+            </svg>
+            <div className="relative flex justify-between pt-[13px]">
+              {STOPS.map((s, i) => (
+                <div
+                  key={s}
+                  className="flex flex-col items-center transition-all duration-1000"
+                  style={{ opacity: inView ? 1 : 0, transform: inView ? "none" : "translateY(10px)", transitionDelay: `${400 + i * 450}ms` }}
+                >
+                  <span className="block h-3.5 w-3.5 rounded-full border-[3px] border-route bg-background" />
+                  <span className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-ink">
+                    <span className="mr-1.5 text-route">0{i + 1}</span>
+                    {s}
                   </span>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="relative flex justify-end">
-            <div
-              className="relative aspect-[4/5] overflow-hidden bg-navy"
-              style={{
-                width: `${width}%`,
-                minWidth: "220px",
-                transition: "width 120ms linear",
-              }}
-            >
-              <img
-                src={blanketWrap}
-                alt="A leather armchair being blanket wrapped for transport"
-                loading="lazy"
-                width={1280}
-                height={1600}
-                className="h-full w-full object-cover"
-                style={{ transform: `scale(${1.12 - eased * 0.1})` }}
-              />
-              <div
-                className="absolute inset-0 flex items-center justify-center bg-navy/55 px-6"
-                style={{ opacity: overlay }}
-              >
-                <p className="display text-center text-[clamp(1.5rem,3.4vw,3.5rem)] text-on-navy">
-                  Specialized.
-                  <br />
-                  <span className="text-primary">Protected.</span>
-                  <br />
-                  Delivered.
-                </p>
-              </div>
-            </div>
+        <div className="reveal-mask relative aspect-[4/5] overflow-hidden rounded-sm lg:aspect-[5/6]" data-reveal>
+          <img
+            src={delivery}
+            alt="American West specialists carrying a sofa into a home"
+            loading="lazy"
+            width={1280}
+            height={1600}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute bottom-0 left-0 bg-primary px-6 py-5 text-on-navy">
+            <p className="eyebrow text-on-navy/70">Multi-channel fulfillment</p>
+            <p className="display mt-2 text-2xl">Store to doorstep.</p>
           </div>
         </div>
       </div>
