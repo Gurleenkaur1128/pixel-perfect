@@ -131,17 +131,17 @@
 
 @utility display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 800;
   text-transform: uppercase;
-  line-height: 0.86;
-  letter-spacing: -0.015em;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
 }
 
 @utility eyebrow {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.24em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
@@ -236,6 +236,31 @@
 
 @utility drift {
   animation: slow-drift 24s var(--ease-premium) infinite alternate;
+}
+
+@utility container-aw {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (min-width: 768px) {
+    padding-inline: 2.5rem;
+  }
+}
+
+@utility h-hero {
+  font-size: clamp(3.625rem, 6vw, 6rem);
+}
+
+@utility h-section {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+@utility section-y {
+  padding-block: 5.5rem;
+  @media (min-width: 1024px) {
+    padding-block: 7.5rem;
+  }
 }
 
 @utility arrow-slide {
