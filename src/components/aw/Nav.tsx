@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Logo } from "@/components/aw/ui";
+import logo from "@/assets/logo.png";
 import { useScrollY } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,13 @@ export function Nav() {
     >
       <div className="container-aw flex items-center justify-between gap-4 py-2">
         <a href="#top" aria-label="American West home" className="shrink-0">
-          <Logo />
+          <img
+            src={logo}
+            alt="American West Worldwide Express, Inc."
+            width={546}
+            height={273}
+            className="h-auto w-[128px] bg-transparent sm:w-[164px]"
+          />
         </a>
 
         <nav className="hidden items-center gap-6 xl:gap-8 lg:flex">

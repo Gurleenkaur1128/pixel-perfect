@@ -1,4 +1,5 @@
 import { useId, useLayoutEffect, useRef } from "react";
+import { TruckModel } from "./TruckModel";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
@@ -81,7 +82,6 @@ const STEPS = [
 
 const KAPPA = 0.5522847498;
 const SIDE_RATIO = 667 / 2000;
-const SIDE_BOTTOM_PAD = 0.164;
 
 type Side = "left" | "right" | "";
 type Mode = "mobile" | "tablet" | "desktop";
@@ -221,42 +221,6 @@ function curvedPath(startX: number, y0: number, turnX: number, radius: number, r
   return `M ${startX} ${y0} L ${turnX} ${y0} C ${turnX + KAPPA * radius} ${y0}, ${x1} ${y0 + (1 - KAPPA) * radius}, ${x1} ${y1} L ${x1} ${roadEndY}`;
 }
 
-function TopTruck({ className }: { className?: string }) {
-  const ribs = Array.from({ length: 14 }, (_, i) => 48 + i * 26);
-  const axles = [78, 168, 268, 352, 508, 586];
-  return (
-    <svg viewBox="0 0 640 220" className={className} aria-hidden="true">
-      <rect
-        x="22"
-        y="54"
-        width="430"
-        height="112"
-        rx="6"
-        fill="#F4F6FB"
-        stroke="#2D419A"
-        strokeWidth="3"
-      />
-      {ribs.map((x) => (
-        <path key={x} d={`M${x} 58 V162`} stroke="#2D419A" strokeOpacity="0.16" strokeWidth="2" />
-      ))}
-      <rect x="22" y="104" width="430" height="8" fill="#F3692B" />
-      <rect x="22" y="116" width="430" height="50" fill="#2D419A" />
-      <path d="M452 62 H548 C578 62 604 84 612 108 V158 H452 Z" fill="#2D419A" />
-      <path d="M508 74 H566 C584 74 598 90 604 104 V116 H508 Z" fill="#E6EBF8" />
-      <circle cx="452" cy="110" r="7" fill="#F3692B" />
-      {axles.map((cx) =>
-        [36, 184].map((cy) => (
-          <g key={`${cx}-${cy}`} data-wheel="">
-            <circle cx={cx} cy={cy} r="16" fill="#172033" />
-            <circle cx={cx} cy={cy} r="6.5" fill="#D5DCF0" />
-            <path d={`M${cx} ${cy - 9} V${cy + 9}`} stroke="#F7F8FC" strokeWidth="2" />
-          </g>
-        )),
-      )}
-    </svg>
-  );
-}
-
 function StopCopy({
   index,
   title,
@@ -293,7 +257,7 @@ export function Journey() {
   const orangeRef = useRef<SVGPathElement>(null);
   const truckRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
-  const sideRef = useRef<HTMLImageElement>(null);
+  const sideRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const servicesLayerRef = useRef<HTMLDivElement>(null);
   const servicesHeadRef = useRef<HTMLDivElement>(null);
@@ -313,17 +277,16 @@ export function Journey() {
     mode: "",
     active: false,
   });
-  const wheelsRef = useRef<SVGGElement[]>([]);
 
-  useLayoutEffect(() => {
+   useLayoutEffect(() => {
     const root = rootRef.current;
     const pin = pinRef.current;
     const scene = sceneRef.current;
     const motion = pathRef.current;
     if (!root || !pin || !scene || !motion) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    gsap.registerPlugin(ScrollTrigger);
+   
+      gsap.registerPlugin(ScrollTrigger);
 
     const layout = () => {
       const w = pin.clientWidth;
@@ -411,7 +374,7 @@ export function Journey() {
           R -= 6;
           turnX = verticalX - R;
         }
-        const vertLen = clamp(mode === "tablet" ? 620 : 740, 560, 860);
+         const vertLen = clamp(mode === "tablet" ? 620 : 740, 560, 860);
         const stopY = y0 + R + vertLen;
         const roadEndY = stopY + truckW * 0.52 + 16;
         d = curvedPath(pathStart, y0, turnX, R, roadEndY);
@@ -477,8 +440,8 @@ export function Journey() {
           side: "",
           enter: "y",
         };
-
-        if (watermarkRef.current) {
+        
+         if (watermarkRef.current) {
           watermarkRef.current.style.left = `${(truckStart + turnX) / 2}px`;
           watermarkRef.current.style.top = `${y0}px`;
           watermarkRef.current.style.fontSize = `${clamp(w * 0.075, 64, 132)}px`;
@@ -636,7 +599,6 @@ export function Journey() {
       }
 
       if (truckRef.current) truckRef.current.style.width = `${truckW}px`;
-      wheelsRef.current = Array.from(pin.querySelectorAll<SVGGElement>("[data-wheel]"));
 
       const anim = animRef.current;
       if (anim.mode !== mode) {
@@ -644,8 +606,7 @@ export function Journey() {
         anim.booted = false;
       }
     };
-
-    const ctx = gsap.context(() => {
+      const ctx = gsap.context(() => {
       layout();
       ScrollTrigger.create({
         trigger: root,
@@ -674,7 +635,8 @@ export function Journey() {
       });
     }, root);
 
-    const play = (el: HTMLElement, vars: gsap.TweenVars) => {
+     
+      const play = (el: HTMLElement, vars: gsap.TweenVars) => {
       ctx.add(() => {
         gsap.to(el, vars);
       });
@@ -713,7 +675,7 @@ export function Journey() {
       }
     };
 
-    const update = () => {
+     const update = () => {
       const geo = geoRef.current;
       const anim = animRef.current;
       if (!geo || geo.samples.length < 2) return;
@@ -772,11 +734,7 @@ export function Journey() {
         topRef.current.style.transform = `translate(-50%, -50%) rotate(${deg}deg)`;
       }
 
-      const radius = Math.max(6, (17 / 640) * geo.truckW);
-      const spin = (arcLen / (Math.PI * 2 * radius)) * 360;
-      for (const wheel of wheelsRef.current) wheel.style.transform = `rotate(${spin}deg)`;
-
-      const drawn = arcLen;
+       const drawn = arcLen;
       const offset = Math.max(0, geo.total - drawn);
       for (const line of [blueRef.current, orangeRef.current]) {
         if (!line) continue;
@@ -814,7 +772,7 @@ export function Journey() {
         servicesHeadRef.current.style.opacity = String(intro);
         servicesHeadRef.current.style.transform = `translateY(${(1 - intro) * -12}px)`;
       }
-      if (journeyHeadRef.current) {
+       if (journeyHeadRef.current) {
         journeyHeadRef.current.style.opacity = String(outro);
         journeyHeadRef.current.style.transform = `translateY(${(1 - outro) * 14}px)`;
       }
@@ -836,9 +794,7 @@ export function Journey() {
     gsap.ticker.add(onTick);
     update();
 
-    const img = sideRef.current;
     const refresh = () => ScrollTrigger.refresh();
-    if (img && !img.complete) img.addEventListener("load", refresh, { once: true });
     requestAnimationFrame(refresh);
 
     return () => {
@@ -846,8 +802,8 @@ export function Journey() {
       ctx.revert();
     };
   }, []);
-
-  return (
+  
+   return (
     <section
       id="services"
       ref={rootRef}
@@ -911,7 +867,7 @@ export function Journey() {
               strokeLinecap="butt"
               strokeLinejoin="round"
             />
-            <path
+             <path
               data-road="base"
               fill="none"
               stroke="#142660"
@@ -944,7 +900,7 @@ export function Journey() {
               strokeDasharray="16 18"
               strokeLinecap="butt"
             />
-            <path ref={pathRef} fill="none" stroke="none" />
+             <path ref={pathRef} fill="none" stroke="none" />
             <g
               ref={chevronRef}
               fill="none"
@@ -976,7 +932,7 @@ export function Journey() {
                 data-state="off"
                 className="absolute opacity-0"
               >
-                <StopCopy
+                 <StopCopy
                   index={`0${i + 1}`}
                   title={service.title}
                   text={service.text}
@@ -1004,7 +960,7 @@ export function Journey() {
             data-state="off"
             className="absolute z-[5] text-center opacity-0"
           >
-            <span className="relative mx-auto block h-3 w-3 rounded-full bg-route">
+             <span className="relative mx-auto block h-3 w-3 rounded-full bg-route">
               <span className="absolute inset-0 animate-[hub-pulse_2.6s_ease-out_infinite] rounded-full bg-route" />
             </span>
             <p className="display mt-3 text-[clamp(22px,2vw,32px)] text-route">Delivered.</p>
@@ -1020,24 +976,22 @@ export function Journey() {
             className="absolute left-0 top-0 z-[7] h-0 overflow-visible"
             style={{ width: "var(--truck-w)" }}
           >
-            <img
+            <div
               ref={sideRef}
-              src="/brand/aw-truck.png"
-              alt=""
-              draggable={false}
-              className="pointer-events-none absolute bottom-0 left-0 h-auto w-full max-w-none select-none"
-              style={{ transform: `translateX(-50%) translateY(${SIDE_BOTTOM_PAD * 100}%)` }}
-            />
+              className="pointer-events-none absolute bottom-0 left-0 w-full -translate-x-1/2 translate-y-[12%] select-none"
+            >
+              <TruckModel />
+            </div>
             <div
               ref={topRef}
               className="pointer-events-none absolute left-0 top-0 w-full opacity-0"
             >
-              <TopTruck className="h-auto w-full" />
+              <TruckModel view="top" />
             </div>
           </div>
         </div>
 
-        <div
+         <div
           className="pointer-events-none absolute inset-x-0 top-0 z-[25] h-16 bg-gradient-to-b from-[#F5F7FB] to-transparent"
           aria-hidden="true"
         />
@@ -1055,11 +1009,9 @@ export function Journey() {
         <div className="container-aw">
           <p className="eyebrow text-route">04 / The route</p>
           <h2 className="display mt-3 text-[clamp(38px,8vw,52px)] text-primary">Our Services</h2>
-          <img
-            src="/brand/aw-truck.png"
-            alt="American West truck"
-            className="mt-6 h-auto w-[min(420px,88vw)]"
-          />
+          <div className="mt-6 w-[min(420px,88vw)]">
+            <TruckModel />
+          </div>
           <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
             {SERVICES.map((service, i) => (
               <article key={service.title}>
@@ -1070,7 +1022,7 @@ export function Journey() {
                   icon={service.icon}
                 />
               </article>
-            ))}
+                ))}
           </div>
           <div className="mt-14">
             <p className="eyebrow text-route">Final mile</p>
