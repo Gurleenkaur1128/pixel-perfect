@@ -47,21 +47,20 @@ export function Careers() {
     const items = Array.from(pin.querySelectorAll<HTMLElement>("[data-career-item]"));
     gsap.registerPlugin(ScrollTrigger);
     const apply = (progress: number) => {
-      const focus = progress * (ITEMS.length - 1);
+      const index = Math.min(ITEMS.length - 1, Math.round(progress * (ITEMS.length - 1)));
       images.forEach((image, i) => {
-        const weight = Math.max(0, 1 - Math.abs(focus - i));
-        image.style.opacity = String(weight);
-        image.style.transform = `scale(${1.03 - weight * 0.03})`;
+        const on = i === index;
+        image.style.opacity = on ? "1" : "0";
+        image.style.transform = "scale(1)";
       });
       items.forEach((item, i) => {
-        const weight = Math.max(0, 1 - Math.abs(focus - i));
-        const active = weight > 0.55;
-        item.style.opacity = String(0.4 + weight * 0.6);
-        item.style.borderColor = active ? "#F3692B" : "rgba(20,38,96,0.15)";
+        const on = i === index;
+        item.style.opacity = on ? "1" : "0.4";
+        item.style.borderColor = on ? "#F3692B" : "rgba(20,38,96,0.15)";
         const title = item.querySelector<HTMLElement>("h3");
-        if (title) title.style.fontSize = active ? "22px" : "18px";
+        if (title) title.style.fontSize = on ? "22px" : "18px";
         const copy = item.querySelector<HTMLElement>("p:last-of-type");
-        if (copy) copy.style.opacity = active ? "1" : "0.65";
+        if (copy) copy.style.opacity = on ? "1" : "0.65";
       });
     };
     apply(0);
@@ -70,7 +69,7 @@ export function Careers() {
       start: "top top",
       end: () => "+=1320",
       pin,
-      scrub: 0.25,
+      scrub: true,
       anticipatePin: 1,
       onUpdate: (self) => apply(self.progress),
     });
@@ -108,7 +107,7 @@ export function Careers() {
                 data-career-image=""
                 src={item.image}
                 alt={item.alt}
-                className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="absolute inset-0 h-full w-full object-cover"
                 style={{ opacity: i === 0 ? 1 : 0, transform: "scale(1)" }}
               />
             ))}
@@ -124,11 +123,11 @@ export function Careers() {
                 <li
                   key={item.title}
                   data-career-item=""
-                  className="border-l-2 pl-5 transition-[opacity,border-color] duration-[400ms]"
+                  className="border-l-2 pl-5"
                   style={{ opacity: i === 0 ? 1 : 0.4, borderColor: i === 0 ? "#F3692B" : "rgba(20,38,96,0.15)" }}
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-route">{item.index}</p>
-                  <h3 className="display mt-1 text-[18px] text-[#142660] transition-all duration-[400ms]">{item.title}</h3>
+                  <h3 className="display mt-1 text-[18px] text-[#142660]">{item.title}</h3>
                   <p className="mt-2 max-w-md text-[15px] leading-relaxed text-[#172033]/75">{item.text}</p>
                 </li>
               ))}
