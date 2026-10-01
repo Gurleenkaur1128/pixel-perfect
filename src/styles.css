@@ -301,3 +301,67 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Journey truck — one continuous route. Width is the source of truth for scale. */
+@property --truck-w {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 160px;
+}
+
+.aw-journey {
+  --truck-w: clamp(130px, 44vw, 170px);
+}
+
+@media (min-width: 768px) {
+  .aw-journey {
+    --truck-w: clamp(190px, 30vw, 240px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .aw-journey {
+    --truck-w: clamp(280px, 26vw, 360px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .aw-journey {
+    --truck-w: clamp(360px, 28vw, 420px);
+  }
+}
+
+@media (min-width: 1536px) {
+  .aw-journey {
+    --truck-w: clamp(400px, 24vw, 460px);
+  }
+}
+
+.aw-truck-probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--truck-w);
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.aw-journey [data-wheel] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.aw-journey-static {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-journey-pin {
+    display: none !important;
+  }
+
+  .aw-journey-static {
+    display: block;
+  }
+}
