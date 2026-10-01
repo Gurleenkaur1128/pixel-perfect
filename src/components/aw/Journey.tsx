@@ -140,6 +140,8 @@ type Anim = {
   active: boolean;
   revealed: number;
   lane: number;
+  /** Right-hand branch of the second turn. Stays once the junction has been reached. */
+  spur: number;
   shaped: number;
   revealJ: number;
   heldY: number | null;
@@ -362,6 +364,9 @@ export function Journey() {
   const laneLRef = useRef<SVGPathElement>(null);
   const laneRRef = useRef<SVGPathElement>(null);
   const chevronRef = useRef<SVGGElement>(null);
+  const spurRef = useRef<SVGPathElement>(null);
+  const flatLRef = useRef<SVGLineElement>(null);
+  const flatRRef = useRef<SVGLineElement>(null);
   const baseRef = useRef<HTMLDivElement>(null);
   const truckRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
@@ -385,6 +390,7 @@ export function Journey() {
     active: false,
     revealed: 0,
     lane: 0,
+    spur: 0,
     shaped: 0,
     revealJ: 0,
     heldY: null,
@@ -499,45 +505,77 @@ export function Journey() {
         baseH = clamp(Math.min(baseH, maxBase), 180, baseH);
         truckW = Math.min(truckW, (h - baseH - navClear - 16) / SIDE_RATIO, w * 0.52);
         yEdge = h - baseH;
-        roadW = clamp(truckW * 0.62, mode === "desktop" ? 210 : 168, mode === "desktop" ? 280 : 220);
+        roadW = clamp(Math.min(w, h) * 0.32, mode === "desktop" ? 280 : 220, mode === "desktop" ? 380 : 300);
         const yCenter = yEdge;
 
-        // One constant-radius quarter circle, the same fillet as a highway corner.
-        vertX = Math.min(w - roadW / 2 - 72, w * 0.74);
-        const minHoriz = Math.max(w * 0.34, truckW * 0.9);
-        let radius = clamp(Math.min(w, h) * 0.42, 320, 500);
-        while (vertX - radius < minHoriz && radius > 250) radius -= 12;
-        radius = Math.min(radius, h * 0.5);
-        const cx = vertX - radius;
-        const cy = yCenter + radius;
-        const P0 = { x: cx, y: yCenter };
-        const midPhi = -Math.PI / 4;
-        turn1 = {
-          x: cx + Math.cos(midPhi) * radius,
-          y: cy + Math.sin(midPhi) * radius,
-        };
-        yJoin = cy;
+        // Two turns: a wide sweep off the straight road, then a tighter turn into the vertical,
+        // with the road continuing to the right at the junction.
+        const sweep = (58 * Math.PI) / 180;
+        const s = Math.sin(sweep);
+        const c = Math.cos(sweep);
+        vertX = clamp(w * 0.58, w * 0.5, w - roadW - 220);
+        let r1 = clamp(Math.min(w, h) * 0.36, 280, 460);
+        let r2 = clamp(r1 * 0.58, 160, 280);
+        const minStraight = Math.max(w * 0.4, truckW);
+        while (vertX - r1 * s - r2 * (1 - s) < minStraight && r1 > 210) {
+          r1 -= 16;
+          r2 = clamp(r1 * 0.58, 140, 260);
+        }
+        const phiA = -Math.PI / 2;
+        const phiB = phiA + sweep;
+        const C1x = vertX - r1 * s - r2 * (1 - s);
+        const C1y = yCenter + r1;
+        const P0 = { x: C1x, y: yCenter };
+        const P1 = { x: C1x + r1 * s, y: C1y - r1 * c };
+        const C2x = P1.x - r2 * s;
+        const C2y = P1.y + r2 * c;
+        yJoin = C2y;
         curveY = yJoin;
-        const arc = ellipseCubic(cx, cy, radius, radius, -Math.PI / 2, 0);
-        const stepGap = h < 760 ? 176 : 214;
-        yFirstStep = yJoin + 168;
+        turn1 = P1;
+        const arc1 = ellipseCubic(C1x, C1y, r1, r1, phiA, phiB);
+        const arc2 = ellipseCubic(C2x, C2y, r2, r2, phiB, 0);
+        const stepGap = h < 760 ? 168 : 200;
+        yFirstStep = yJoin + 150;
         yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
-        const extra = 300;
+        const extra = 280;
         yStop = yLastStep + extra;
-        yEnd = yStop + Math.round(h * 0.9);
+        yEnd = yStop + Math.round(h * 0.72);
         const xStart = -0.25 * truckW;
-        const bend = cubicCmd(arc);
+        const bend = `${cubicCmd(arc1)} ${cubicCmd(arc2)}`;
 
         motionD = `M ${n(xStart)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
-        const roadStartX = Math.max(xStart + truckW * 0.2, P0.x - Math.max(truckW * 0.8, 220));
+        const roadStartX = P0.x - 36;
         roadD = `M ${n(roadStartX)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
         roadStartHint = { x: roadStartX, y: yCenter };
 
-        const inner = radius - roadW * 0.3;
+        const armTop = yJoin - roadW * 0.95;
+        const armBot = yJoin - roadW * 0.08;
+        const fillet = roadW * 0.62;
+        const spurLeft = vertX - roadW * 0.08;
+        const spurRight = w + 200;
+        if (spurRef.current) {
+          spurRef.current.setAttribute(
+            "d",
+            `M ${n(spurLeft)} ${n(armTop)} L ${n(spurRight)} ${n(armTop)} L ${n(spurRight)} ${n(armBot)} L ${n(spurLeft + fillet)} ${n(armBot)} Q ${n(spurLeft)} ${n(armBot)} ${n(spurLeft)} ${n(armBot + fillet)} Z`,
+          );
+        }
+        if (flatLRef.current && flatRRef.current) {
+          const yL = yCenter - roadW * 0.22;
+          const yR = yCenter + roadW * 0.22;
+          flatLRef.current.setAttribute("x1", "0");
+          flatLRef.current.setAttribute("x2", String(P0.x + 24));
+          flatLRef.current.setAttribute("y1", String(yL));
+          flatLRef.current.setAttribute("y2", String(yL));
+          flatRRef.current.setAttribute("x1", "0");
+          flatRRef.current.setAttribute("x2", String(P0.x + 24));
+          flatRRef.current.setAttribute("y1", String(yR));
+          flatRRef.current.setAttribute("y2", String(yR));
+        }
+
         chevron = {
-          x: cx + Math.cos(midPhi) * inner,
-          y: cy + Math.sin(midPhi) * inner,
-          a: Math.PI / 4,
+          x: spurLeft + fillet * 0.72,
+          y: armBot + fillet * 0.42,
+          a: (42 * Math.PI) / 180,
         };
 
         shiftX = w / 2 - vertX;
@@ -565,30 +603,31 @@ export function Journey() {
           });
         }
 
-        const headW = clamp(w * 0.26, 220, 360);
+        const headW = clamp(w * 0.34, 280, 480);
         if (journeyHeadRef.current) {
-          journeyHeadRef.current.style.left = `${vertX - roadW / 2 - 40 - headW}px`;
-          journeyHeadRef.current.style.top = `${yJoin + 36}px`;
+          journeyHeadRef.current.style.left = "48px";
+          journeyHeadRef.current.style.top = "108px";
           journeyHeadRef.current.style.width = `${headW}px`;
+          const blurb = journeyHeadRef.current.querySelector<HTMLElement>("[data-blurb]");
+          if (blurb) {
+            blurb.style.top = `${Math.max(headW * 0.85, h - 280)}px`;
+          }
         }
         if (watermarkRef.current) {
           watermarkRef.current.style.top = `${Math.max(96, yEdge - truckH * 0.62)}px`;
           watermarkRef.current.style.fontSize = `${clamp(w * 0.15, 96, 220)}px`;
         }
 
-        const stepW = clamp(mode === "desktop" ? 272 : 248, 240, 290);
-        const rightX = vertX + roadW / 2 + 44;
-        const leftX = vertX - roadW / 2 - 44 - stepW;
+        const stepW = clamp(mode === "desktop" ? 280 : 248, 230, 300);
+        const rightX = vertX + roadW / 2 + 56;
         for (let i = 0; i < STEPS.length; i++) {
-          const step = STEPS[i];
-          if (!step) continue;
           const y = yFirstStep + i * stepGap;
           steps.push({
-            x: step.side === "right" ? rightX : leftX,
+            x: rightX,
             y,
             t: 0,
             w: stepW,
-            side: step.side,
+            side: "right",
             enter: "x",
           });
         }
@@ -631,10 +670,10 @@ export function Journey() {
         markers = [
           { j: 0, u: 0 },
           { j: 0.06, u: 0 },
-          { j: 0.5, u: uFlat },
-          { j: 0.6, u: u1 },
-          { j: 0.68, u: u2 },
-          { j: 0.72, u: uSettle },
+          { j: 0.54, u: uFlat },
+          { j: 0.62, u: u1 },
+          { j: 0.7, u: u2 },
+          { j: 0.74, u: uSettle },
           { j: 0.74, u: uCard0 },
           { j: 0.9, u: uCardN },
           { j: 0.97, u: uExtra },
@@ -685,6 +724,9 @@ export function Journey() {
         );
         chevronRef.current.style.display = mode === "mobile" ? "none" : "";
       }
+      if (spurRef.current) spurRef.current.style.display = mode === "mobile" ? "none" : "";
+      if (flatLRef.current) flatLRef.current.style.display = mode === "mobile" ? "none" : "";
+      if (flatRRef.current) flatRRef.current.style.display = mode === "mobile" ? "none" : "";
 
       const worldH = Math.max(h + 40, yEnd + 80, delivered.y + 140);
       scene.style.height = `${worldH}px`;
@@ -726,7 +768,7 @@ export function Journey() {
         curveY,
         vertX,
         yEnd,
-        overlap: mode === "mobile" ? 0 : Math.round(h * 0.34),
+        overlap: 0,
       };
       geoRef.current = geo;
 
@@ -770,6 +812,7 @@ export function Journey() {
         anim.viewY = 0;
         anim.revealed = 0;
         anim.lane = 0;
+        anim.spur = 0;
         anim.shaped = 0;
         anim.revealJ = 0;
         anim.heldY = null;
@@ -777,7 +820,7 @@ export function Journey() {
       }
       const net = document.querySelector<HTMLElement>(".aw-network");
       if (net) {
-        net.style.marginTop = mode === "mobile" ? "0px" : `-${Math.round(h * 0.34)}px`;
+        net.style.marginTop = "0px";
         net.style.transform = "";
       }
     };
@@ -813,6 +856,7 @@ export function Journey() {
           anim.active = false;
           anim.revealed = 0;
           anim.lane = 0;
+          anim.spur = 0;
           anim.shaped = 0;
           anim.revealJ = 0;
           anim.heldY = null;
@@ -887,7 +931,7 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.67, journey);
+      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
       const drawY = pt.y;
       const dist = u * geo.total;
       const bob = Math.sin(dist * 0.028) * 0.65;
@@ -915,11 +959,11 @@ export function Journey() {
         const holdTurn = 1 - smoothstep(0.64, 0.76, journey);
         if (holdTurn > 0) targetVY = keepBend * holdTurn + targetVY * (1 - holdTurn);
       }
-      if (geo.mode !== "mobile" && geo.overlap > 0 && journey > 0.94) {
-        const bandTop = pinH - geo.overlap + geo.scroll * (1 - journey);
-        const exitY = Math.min(bandTop, pinH) + 12 - drawY;
-        const blend = smoothstep(0.94, 0.985, journey);
-        targetVY = targetVY * (1 - blend) + exitY * blend;
+      if (geo.mode !== "mobile" && journey > 0.84) {
+        if (anim.heldY == null) anim.heldY = targetVY;
+        targetVY = anim.heldY;
+      } else {
+        anim.heldY = null;
       }
       anim.viewX = targetVX;
       anim.viewY = targetVY;
@@ -927,8 +971,7 @@ export function Journey() {
 
       if (truckRef.current) {
         truckRef.current.style.transform = `translate3d(${pt.x}px, ${drawY + bob}px, 0)`;
-        const cover = geo.mode === "mobile" ? 0 : smoothstep(0.962, 0.984, journey);
-        truckRef.current.style.opacity = String(1 - cover);
+        truckRef.current.style.opacity = "1";
       }
       if (shadowRef.current) {
         const wide = geo.truckW * (0.62 - pitch * 0.28);
@@ -943,22 +986,33 @@ export function Journey() {
       const span = Math.max(0.0001, 1 - geo.roadStartU);
       const along = ((u - geo.roadStartU) / span) * geo.roadTotal;
       const nose = geo.truckW * (geo.mode === "mobile" ? 0.34 : 0.52);
-      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.49, 0.56, journey);
+      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.54, 0.62, journey);
       const drawn = clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate;
-      anim.revealed = drawn;
+      anim.revealed = Math.max(anim.revealed, drawn);
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
-      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.49, 0.56, journey);
-      anim.lane = laneFade;
+      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.54, 0.62, journey);
+      anim.lane = Math.max(anim.lane, laneFade);
+      const roadVis = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.56, journey);
+      const masked = roadRef.current?.parentElement;
+      if (masked) masked.style.opacity = String(roadVis);
+      anim.spur = Math.max(anim.spur, geo.mode === "mobile" ? 0 : journey >= 0.63 ? 1 : 0);
+      if (spurRef.current) spurRef.current.style.opacity = String(anim.spur * roadVis);
+      if (chevronRef.current && geo.mode !== "mobile") {
+        chevronRef.current.style.opacity = String(anim.spur * roadVis);
+      }
+      const flat = smoothstep(0.5, 0.56, journey) * (1 - smoothstep(0.62, 0.7, journey));
+      if (flatLRef.current) flatLRef.current.style.opacity = String(0.55 * flat);
+      if (flatRRef.current) flatRRef.current.style.opacity = String(0.55 * flat);
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * anim.lane);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * anim.lane);
 
       if (baseRef.current && geo.showBase) {
         anim.shaped = journey;
         const shaped = journey;
-        const rise = smoothstep(0.42, 0.48, shaped);
-        const settle = smoothstep(0.46, 0.52, shaped);
-        const handoff = smoothstep(0.5, 0.56, shaped);
+        const rise = smoothstep(0.48, 0.54, shaped);
+        const settle = smoothstep(0.52, 0.6, shaped);
+        const handoff = smoothstep(0.54, 0.62, shaped);
         const retract = smoothstep(0.99, 1, shaped);
         const clear = geo.truckW * SIDE_RATIO + 72;
         const risenTop = geo.yEdge - clear;
@@ -970,7 +1024,7 @@ export function Journey() {
         const height = heightRise + (geo.roadW - heightRise) * settle;
         baseRef.current.style.top = `${top}px`;
         const fullRight = geo.viewW * 2;
-        const rightEdge = fullRight + (geo.roadStartX + 72 - fullRight) * handoff;
+        const rightEdge = fullRight + (geo.roadStartX + 40 - fullRight) * handoff;
         const clipRight = Math.max(0, fullRight - rightEdge);
         const clipLeft = retract * (geo.roadStartX + geo.viewW);
         baseRef.current.style.height = `${height}px`;
@@ -997,10 +1051,9 @@ export function Journey() {
         const deliveredAt = Number(deliveredEl.dataset["t"] ?? 1);
         if (geo.mode !== "mobile") {
           const pinW = pin.clientWidth || window.innerWidth;
-          const bandTop = pinH - geo.overlap + geo.scroll * (1 - journey);
           const roadX = geo.vertX + anim.viewX;
-          deliveredEl.style.left = `${clamp(roadX + geo.roadW * 0.46, 16, pinW - 230)}px`;
-          deliveredEl.style.top = `${Math.max(120, Math.min(bandTop, pinH) - 156)}px`;
+          deliveredEl.style.left = `${clamp(roadX - 100, 16, pinW - 230)}px`;
+          deliveredEl.style.top = `${pinH - 168}px`;
         }
         syncStop(deliveredEl, journey, journey >= deliveredAt, "delivered");
       }
@@ -1092,6 +1145,23 @@ export function Journey() {
                 <path ref={maskRef} fill="none" stroke="white" strokeLinecap="butt" strokeLinejoin="round" />
               </mask>
             </defs>
+            <line
+              ref={flatLRef}
+              stroke="white"
+              strokeWidth="2.25"
+              strokeDasharray="18 20"
+              strokeLinecap="butt"
+              opacity="0"
+            />
+            <line
+              ref={flatRRef}
+              stroke="white"
+              strokeWidth="2.25"
+              strokeDasharray="18 20"
+              strokeLinecap="butt"
+              opacity="0"
+            />
+            <path ref={spurRef} fill={BASE} opacity="0" />
             <g mask={`url(#aw-road-mask-${uid})`}>
               <path
                 ref={roadRef}
@@ -1116,18 +1186,19 @@ export function Journey() {
                 strokeDasharray="18 20"
                 strokeLinecap="butt"
               />
-              <g
-                ref={chevronRef}
-                fill="none"
-                stroke="white"
-                strokeWidth="1.6"
-                strokeOpacity="0.55"
-                strokeLinecap="round"
-              >
-                <path d="M-28 -11 L-12 0 L-28 11" />
-                <path d="M-12 -10 L4 0 L-12 10" />
-                <path d="M4 -8 L18 0 L4 8" />
-              </g>
+            </g>
+            <g
+              ref={chevronRef}
+              fill="none"
+              stroke="white"
+              strokeWidth="1.6"
+              strokeOpacity="0.7"
+              strokeLinecap="round"
+              opacity="0"
+            >
+              <path d="M-28 -11 L-12 0 L-28 11" />
+              <path d="M-12 -10 L4 0 L-12 10" />
+              <path d="M4 -8 L18 0 L4 8" />
             </g>
             <path ref={motionRef} fill="none" stroke="none" />
           </svg>
@@ -1151,19 +1222,6 @@ export function Journey() {
                 />
               </article>
             ))}
-          </div>
-
-          <div
-            ref={journeyHeadRef}
-            className="pointer-events-none absolute z-[5] opacity-0 max-md:left-5 max-md:top-24 max-md:w-[min(18rem,70vw)]"
-          >
-            <p className="eyebrow text-route">Final mile</p>
-            <h3 className="display mt-2 text-[clamp(28px,3.4vw,52px)] leading-[0.96] text-[#142660]">
-              Reliability at every milestone
-            </h3>
-            <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-[#172033]/70 md:text-[15px]">
-              From facility to front door. The last miles are where a brand is kept.
-            </p>
           </div>
 
           {STEPS.map((step, i) => (
@@ -1190,6 +1248,26 @@ export function Journey() {
           >
             <TruckModel poseRef={poseRef} />
           </div>
+        </div>
+
+        <div
+          ref={journeyHeadRef}
+          className="pointer-events-none absolute z-[6] opacity-0 max-md:left-5 max-md:top-24 max-md:w-[min(18rem,78vw)]"
+        >
+          <p className="eyebrow text-route">Final mile</p>
+          <h3 className="display mt-3 text-[clamp(42px,4.8vw,72px)] leading-[0.9] tracking-[-0.03em] text-[#142660]">
+            Reliability
+            <br />
+            at every
+            <br />
+            milestone
+          </h3>
+          <p
+            data-blurb=""
+            className="absolute left-0 max-w-[280px] text-[15px] leading-relaxed text-[#172033]/75 max-md:static max-md:mt-4"
+          >
+            From facility to front door. The last miles are where a brand is kept.
+          </p>
         </div>
 
         <div
