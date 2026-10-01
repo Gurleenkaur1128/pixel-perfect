@@ -126,6 +126,8 @@ type Geo = {
   yEnd: number;
   /** How far Nationwide is pulled up so it meets the road with no white gap. */
   overlap: number;
+  /** Scene offset that holds every milestone card inside the pin. */
+  frameY: number;
 };
 
 type Anim = {
@@ -448,6 +450,7 @@ export function Journey() {
       let yLastStep = h;
       let yStop = h;
       let yEnd = h;
+      let frameY = 0;
 
       if (mode === "mobile") {
         showBase = false;
@@ -534,8 +537,14 @@ export function Journey() {
         turn1 = P1;
         const arc1 = ellipseCubic(C1x, C1y, r1, r1, phiA, phiB);
         const arc2 = ellipseCubic(C2x, C2y, r2, r2, phiB, 0);
-        const stepGap = h < 760 ? 168 : 200;
-        yFirstStep = yJoin + 150;
+        const count = STEPS.length;
+        const block = 130;
+        const stackTop = 104;
+        const avail = h - stackTop - 18;
+        const gap = clamp((avail - block * count) / Math.max(1, count - 1), 4, 36);
+        const stepGap = block + gap;
+        yFirstStep = yJoin + 140;
+        frameY = stackTop - yFirstStep;
         yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
         const extra = 280;
         yStop = yLastStep + extra;
@@ -606,7 +615,7 @@ export function Journey() {
         const headW = clamp(w * 0.34, 280, 480);
         if (journeyHeadRef.current) {
           journeyHeadRef.current.style.left = "48px";
-          journeyHeadRef.current.style.top = "108px";
+          journeyHeadRef.current.style.top = "112px";
           journeyHeadRef.current.style.width = `${headW}px`;
           const blurb = journeyHeadRef.current.querySelector<HTMLElement>("[data-blurb]");
           if (blurb) {
@@ -614,8 +623,17 @@ export function Journey() {
           }
         }
         if (watermarkRef.current) {
-          watermarkRef.current.style.top = `${Math.max(96, yEdge - truckH * 0.62)}px`;
-          watermarkRef.current.style.fontSize = `${clamp(w * 0.15, 96, 220)}px`;
+          const wm = watermarkRef.current;
+          wm.style.left = "50%";
+          wm.style.transform = "translate(-50%, 0)";
+          wm.style.fontSize = "100px";
+          const widthAt100 = wm.scrollWidth || Math.round(w * 0.52);
+          const fitW = widthAt100 > 0 ? ((w - 72) / widthAt100) * 100 : 140;
+          const fitH = Math.max(64, (yEdge - 120) / 0.96);
+          const wmSize = clamp(Math.min(fitW, fitH), 64, 210);
+          const line = wmSize * 0.96;
+          wm.style.fontSize = `${wmSize}px`;
+          wm.style.top = `${Math.max(104, yEdge - line - 22)}px`;
         }
 
         const stepW = clamp(mode === "desktop" ? 280 : 248, 230, 300);
@@ -706,14 +724,14 @@ export function Journey() {
       });
       steps.forEach((pos, i) => {
         const earlier = steps[i - 1];
-        const floor = mode === "mobile" ? 0.5 : 0.745;
-        const prev = earlier ? earlier.t + 0.032 : floor;
-        const cap = mode === "mobile" ? 0.96 : 0.9;
+        const floor = mode === "mobile" ? 0.5 : 0.8;
+        const prev = earlier ? earlier.t + 0.03 : floor;
+        const cap = mode === "mobile" ? 0.96 : 0.92;
         pos.t = clamp(Math.max(pos.t, prev), floor, cap);
       });
       const lastStep = steps[steps.length - 1];
       delivered.t = clamp((lastStep?.t ?? 0.9) + 0.04, 0.9, 0.96);
-      if (mode !== "mobile") delivered.t = 0.988;
+      if (mode !== "mobile") delivered.t = 0.962;
 
       if (laneLRef.current) laneLRef.current.setAttribute("d", offsetPath(road, roadW * 0.3));
       if (laneRRef.current) laneRRef.current.setAttribute("d", offsetPath(road, -roadW * 0.3));
@@ -769,6 +787,7 @@ export function Journey() {
         vertX,
         yEnd,
         overlap: 0,
+        frameY,
       };
       geoRef.current = geo;
 
@@ -953,18 +972,17 @@ export function Journey() {
       const aim = geo.mode === "mobile" ? geo.preferY : pinH * 0.58;
       const locked = aim - (drawY + bob);
       let targetVY = locked < 0 ? locked * follow : 0;
-      if (geo.mode !== "mobile" && geo.curveY > 0) {
+      if (geo.mode !== "mobile" && geo.curveY > 0 && journey > 0.5) {
         const turnBottom = geo.curveY + geo.roadW * 0.55;
         const keepBend = Math.min(0, pinH - 28 - turnBottom);
         const holdTurn = 1 - smoothstep(0.64, 0.76, journey);
         if (holdTurn > 0) targetVY = keepBend * holdTurn + targetVY * (1 - holdTurn);
       }
-      if (geo.mode !== "mobile" && journey > 0.84) {
-        if (anim.heldY == null) anim.heldY = targetVY;
-        targetVY = anim.heldY;
-      } else {
-        anim.heldY = null;
+      if (geo.mode !== "mobile") {
+        const frameIn = smoothstep(0.7, 0.78, journey);
+        targetVY = targetVY * (1 - frameIn) + geo.frameY * frameIn;
       }
+      if (geo.mode !== "mobile" && journey < 0.5) targetVY = 0;
       anim.viewX = targetVX;
       anim.viewY = targetVY;
       scene.style.transform = `translate3d(${anim.viewX}px, ${anim.viewY}px, 0)`;
@@ -1021,7 +1039,8 @@ export function Journey() {
         const topRise = geo.yEdge + (risenTop - geo.yEdge) * rise;
         const heightRise = geo.baseH + (risenH - geo.baseH) * rise;
         const top = topRise + (roadTop - topRise) * settle;
-        const height = heightRise + (geo.roadW - heightRise) * settle;
+        let height = heightRise + (geo.roadW - heightRise) * settle;
+        if (journey < 0.505) height = Math.max(height, pinH - anim.viewY - top + 8);
         baseRef.current.style.top = `${top}px`;
         const fullRight = geo.viewW * 2;
         const rightEdge = fullRight + (geo.roadStartX + 40 - fullRight) * handoff;
@@ -1053,7 +1072,7 @@ export function Journey() {
           const pinW = pin.clientWidth || window.innerWidth;
           const roadX = geo.vertX + anim.viewX;
           deliveredEl.style.left = `${clamp(roadX - 100, 16, pinW - 230)}px`;
-          deliveredEl.style.top = `${pinH - 168}px`;
+          deliveredEl.style.top = `${Math.round(pinH * 0.52)}px`;
         }
         syncStop(deliveredEl, journey, journey >= deliveredAt, "delivered");
       }
@@ -1064,10 +1083,9 @@ export function Journey() {
       }
 
       const wmFade = geo.mode === "mobile" ? 1 - smoothstep(0.05, 0.2, revealJ) : 1 - smoothstep(0.46, 0.54, revealJ);
-      const drift = geo.mode === "mobile" ? 0 : -smoothstep(0.1, 0.5, journey) * geo.truckW * 1.15;
       if (watermarkRef.current) {
         watermarkRef.current.style.opacity = String(wmFade);
-        watermarkRef.current.style.transform = `translate3d(${drift}px, -50%, 0)`;
+        watermarkRef.current.style.transform = "translate(-50%, 0)";
       }
       if (eyebrowRef.current) eyebrowRef.current.style.opacity = String(0.85 * wmFade);
 
