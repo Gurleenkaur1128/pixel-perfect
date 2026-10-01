@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import logo from "@/assets/logo.png";
+import logoBlue from "@/assets/logo.png";
+import logoWhite from "@/assets/logo-white.png";
 import { AwButton } from "@/components/aw/ui";
 import { useScrollY } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
@@ -35,20 +36,26 @@ export function Nav() {
       )}
     >
       <div className="container-aw flex items-center justify-between gap-4 py-2">
-        <a
-          href="#top"
-          aria-label="American West home"
-          className={cn(
-            "shrink-0 rounded-sm px-1.5 py-1 transition-[background-color,backdrop-filter] duration-700",
-            solid ? "bg-transparent" : "bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px]",
-          )}
-        >
+        <a href="#top" aria-label="American West home" className="relative block shrink-0">
           <img
-            src={logo}
+            src={logoWhite}
+            alt=""
+            width={1774}
+            height={887}
+            className={cn(
+              "h-auto w-[132px] bg-transparent transition-opacity duration-700 sm:w-[168px]",
+              solid ? "opacity-0" : "opacity-100",
+            )}
+          />
+          <img
+            src={logoBlue}
             alt="American West Worldwide Express, Inc."
             width={546}
             height={273}
-            className="h-auto w-[128px] bg-transparent sm:w-[164px]"
+            className={cn(
+              "absolute inset-0 h-auto w-[132px] bg-transparent transition-opacity duration-700 sm:w-[168px]",
+              solid ? "opacity-100" : "opacity-0",
+            )}
           />
         </a>
 
@@ -70,10 +77,7 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <AwButton href="#track" arrow="↗" compact>
-            Track Shipment
-          </AwButton>
+        <div className="hidden items-center lg:flex">
           <AwButton href="#quote" compact>
             Request a Quote
           </AwButton>
@@ -98,7 +102,7 @@ export function Nav() {
         )}
       >
         <nav className="flex flex-col px-6 pb-6 pt-1">
-          {[...LINKS, { label: "Track Shipment", href: "#track" }].map((l) => (
+          {LINKS.map((l) => (
             <a
               key={l.label}
               href={l.href}

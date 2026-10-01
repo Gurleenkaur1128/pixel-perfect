@@ -358,12 +358,12 @@
 .aw-network {
   position: relative;
   z-index: 6;
-  margin-top: -8vh;
+  margin-top: -28vh;
 }
 
 @media (min-width: 1024px) {
   .aw-network {
-    margin-top: -10vh;
+    margin-top: -42vh;
   }
 }
 
@@ -385,12 +385,15 @@
   display: grid;
   place-items: center;
   background: #f5f7fb;
-  transition: opacity 0.45s ease, visibility 0.45s ease;
+  animation: aw-preloader-out 0.28s ease 1.5s forwards;
 }
 
-.aw-preloader[data-hide="true"] {
-  opacity: 0;
-  visibility: hidden;
+@keyframes aw-preloader-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 .aw-preloader-stage {
@@ -400,12 +403,14 @@
 }
 
 .aw-preloader-truck {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  top: 44%;
   left: 0;
-  width: 148px;
+  z-index: 2;
+  width: 210px;
   height: auto;
-  animation: aw-preloader-truck 1.35s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  aspect-ratio: 2000 / 667;
+  animation: aw-preloader-truck 1.45s cubic-bezier(0.45, 0, 0.12, 1) forwards;
 }
 
 .aw-preloader-word {
@@ -430,13 +435,10 @@
 
 @keyframes aw-preloader-truck {
   0% {
-    transform: translateX(-130%);
-  }
-  42% {
-    transform: translateX(40%);
+    transform: translateX(-110%);
   }
   100% {
-    transform: translateX(280%);
+    transform: translateX(calc(100vw + 24px));
   }
 }
 
@@ -535,6 +537,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .aw-preloader,
   .aw-preloader-truck,
   .aw-preloader-word span {
     animation: none;
