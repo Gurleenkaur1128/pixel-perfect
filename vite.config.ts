@@ -6,10 +6,28 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig({
+const lovableConfig = defineConfig({
+  vite: {
+    resolve: { tsconfigPaths: true },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
 });
+
+// The shared config still injects the legacy plugin; Vite 8 resolves paths natively.
+export default async (...args: Parameters<typeof lovableConfig>) => {
+  const config = await lovableConfig(...args);
+  config.plugins = (config.plugins ?? []).filter(
+    (plugin) =>
+      !(
+        plugin &&
+        typeof plugin === "object" &&
+        "name" in plugin &&
+        plugin.name === "vite-tsconfig-paths"
+      ),
+  );
+  return config;
+};

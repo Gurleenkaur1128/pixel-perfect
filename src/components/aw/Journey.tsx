@@ -1,6 +1,7 @@
 import { useId, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { TruckModel, type TruckPose } from "./TruckModel";
 import {
   Boxes,
   ClipboardList,
@@ -80,9 +81,7 @@ const STEPS = [
 ];
 
 const BASE = "#0F1730";
-const SIDE_RATIO = 667 / 2000;
-/** Transparent pixels under the tires, as a fraction of the image height. */
-const SIDE_BOTTOM_PAD = 0.02;
+const SIDE_RATIO = 1 / 3.4;
 const ROAD_LEAD = 140;
 
 type Side = "left" | "right" | "";
@@ -296,33 +295,6 @@ function offsetPath(path: SVGPathElement, dist: number, count = 96) {
   return d;
 }
 
-function TopTruck({ className }: { className?: string }) {
-  const ribs = Array.from({ length: 16 }, (_, i) => 36 + i * 22);
-  const axles = [78, 156, 234, 312, 468, 540];
-  return (
-    <svg viewBox="0 0 640 210" className={className} aria-hidden="true">
-      <rect x="18" y="58" width="430" height="94" rx="4" fill="#F4F7FB" stroke="#142660" strokeWidth="3" />
-      {ribs.map((x) => (
-        <path key={x} d={`M${x} 62 V148`} stroke="#142660" strokeOpacity="0.14" strokeWidth="2" />
-      ))}
-      <rect x="18" y="100" width="430" height="6" fill="#F3692B" />
-      <rect x="18" y="108" width="430" height="44" fill="#2D419A" />
-      <path d="M448 64 H552 C586 64 612 86 620 112 V150 H448 Z" fill="#142660" />
-      <path d="M500 76 H562 C582 76 598 90 604 104 V116 H500 Z" fill="#E7EDF8" />
-      <circle cx="448" cy="108" r="5" fill="#F3692B" />
-      {axles.map((cx) =>
-        [46, 164].map((cy) => (
-          <g key={`${cx}-${cy}`} data-wheel="">
-            <circle cx={cx} cy={cy} r="13" fill="#172033" />
-            <circle cx={cx} cy={cy} r="5" fill="#D5DCF0" />
-            <path d={`M${cx} ${cy - 7} V${cy + 7}`} stroke="#F7F8FC" strokeWidth="1.6" />
-          </g>
-        )),
-      )}
-    </svg>
-  );
-}
-
 function StopCopy({
   index,
   title,
@@ -348,7 +320,7 @@ function StopCopy({
         <span className="eyebrow text-route">{index}</span>
       </div>
       <h3
-        className={`display mt-2 text-[15px] leading-tight tracking-wide ${light ? "text-current" : "text-[#142660]"}`}
+        className={`display mt-2 text-[15px] leading-tight tracking-wide text-balance ${light ? "text-current" : "text-[#142660]"}`}
       >
         {title}
       </h3>
@@ -376,8 +348,7 @@ export function Journey() {
   const baseRef = useRef<HTMLDivElement>(null);
   const truckRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
-  const sideRef = useRef<HTMLImageElement>(null);
-  const topRef = useRef<HTMLDivElement>(null);
+  const poseRef = useRef<TruckPose>({ pitch: 0, heading: 0, distance: 0 });
   const servicesLayerRef = useRef<HTMLDivElement>(null);
   const watermarkRef = useRef<HTMLHeadingElement>(null);
   const eyebrowRef = useRef<HTMLParagraphElement>(null);
@@ -395,7 +366,6 @@ export function Journey() {
     mode: "",
     active: false,
   });
-  const wheelsRef = useRef<SVGGElement[]>([]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -544,7 +514,7 @@ export function Journey() {
         const travelLeft = Math.max(28, truckW * 0.2);
         const travelRight = Math.max(travelLeft + 240, xA - 24);
         const usable = travelRight - travelLeft;
-        const cardW = clamp(usable / SERVICES.length - 10, 132, 210);
+        const cardW = Math.min(200, usable / SERVICES.length - 18);
         for (let i = 0; i < SERVICES.length; i++) {
           const cx = travelLeft + (usable * (i + 0.5)) / SERVICES.length;
           services.push({
@@ -746,7 +716,6 @@ export function Journey() {
       if (deliveredEl) applyPos(deliveredEl, delivered);
 
       if (truckRef.current) truckRef.current.style.width = `${truckW}px`;
-      wheelsRef.current = Array.from(pin.querySelectorAll<SVGGElement>("[data-wheel]"));
 
       const anim = animRef.current;
       if (anim.mode !== mode) {
@@ -840,7 +809,7 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.6, journey);
+      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
       const drawY = pt.y;
       const dist = u * geo.total;
       const bob = Math.sin(dist * 0.028) * 0.65;
@@ -854,9 +823,9 @@ export function Journey() {
         anim.angle = lerpAngle(anim.angle, pt.a, 0.34);
       }
 
-      const pan = geo.mode === "mobile" ? 0 : smoothstep(0.6, 0.78, journey);
+      const pan = geo.mode === "mobile" ? 0 : smoothstep(0.62, 0.78, journey);
       const follow =
-        geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.56, 0.7, journey);
+        geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.44, 0.6, journey);
       const targetVX = geo.shiftX * pan;
       const locked = geo.preferY - (drawY + bob);
       const targetVY = locked < 0 ? locked * follow : 0;
@@ -873,25 +842,14 @@ export function Journey() {
         shadowRef.current.style.width = `${wide}px`;
         shadowRef.current.style.opacity = `${(1 - pitch) * 0.35}`;
       }
-      if (sideRef.current) {
-        const sideFade = 1 - smoothstep(0.2, 0.62, pitch);
-        sideRef.current.style.opacity = String(sideFade);
-        sideRef.current.style.transform = `translateX(-50%) translateY(${SIDE_BOTTOM_PAD * 100}%)`;
-      }
-      if (topRef.current) {
-        const deg = (anim.angle * 180) / Math.PI;
-        topRef.current.style.opacity = String(smoothstep(0.28, 0.85, pitch));
-        topRef.current.style.transform = `translate(-50%, -50%) rotate(${deg}deg)`;
-      }
-
-      const radius = Math.max(8, geo.truckW * 0.045);
-      const spin = (dist / (Math.PI * 2 * radius)) * 360;
-      for (const wheel of wheelsRef.current) wheel.style.transform = `rotate(${spin}deg)`;
+      poseRef.current.pitch = pitch;
+      poseRef.current.heading = anim.angle;
+      poseRef.current.distance = dist;
 
       const span = Math.max(0.0001, 1 - geo.roadStartU);
       const along = ((u - geo.roadStartU) / span) * geo.roadTotal;
       const nose = geo.truckW * (geo.mode === "mobile" ? 0.34 : 0.52);
-      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.53, 0.56, journey);
+      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.56, journey);
       const drawn = clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate;
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - drawn)}`;
@@ -900,11 +858,18 @@ export function Journey() {
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * laneFade);
 
       if (baseRef.current && geo.showBase) {
-        const morph = smoothstep(0.46, 0.56, journey);
-        const handoff = smoothstep(0.54, 0.62, journey);
-        const retract = smoothstep(0.62, 0.74, journey);
-        const height = geo.baseH + (geo.roadW - geo.baseH) * morph;
-        const top = geo.yEdge - (geo.roadW / 2) * morph;
+        const rise = smoothstep(0.4, 0.5, journey);
+        const settle = smoothstep(0.5, 0.58, journey);
+        const handoff = smoothstep(0.6, 0.7, journey);
+        const retract = smoothstep(0.68, 0.8, journey);
+        const clear = geo.truckW * SIDE_RATIO + 72;
+        const risenTop = geo.yEdge - clear;
+        const risenH = geo.baseH + clear;
+        const roadTop = geo.yEdge - geo.roadW / 2;
+        const topRise = geo.yEdge + (risenTop - geo.yEdge) * rise;
+        const heightRise = geo.baseH + (risenH - geo.baseH) * rise;
+        const top = topRise + (roadTop - topRise) * settle;
+        const height = heightRise + (geo.roadW - heightRise) * settle;
         baseRef.current.style.top = `${top}px`;
         const fullRight = geo.viewW * 2;
         const rightEdge = fullRight + (geo.roadStartX + 72 - fullRight) * handoff;
@@ -956,6 +921,8 @@ export function Journey() {
       if (speedRef.current) {
         const next = `${Math.round(anim.kmh)} KM/H`;
         if (speedRef.current.textContent !== next) speedRef.current.textContent = next;
+        const speedFade = geo.mode === "mobile" ? 1 - smoothstep(0.08, 0.18, journey) : 1;
+        speedRef.current.style.opacity = String(speedFade);
       }
     };
 
@@ -963,9 +930,7 @@ export function Journey() {
     gsap.ticker.add(onTick);
     update();
 
-    const img = sideRef.current;
     const refresh = () => ScrollTrigger.refresh();
-    if (img && !img.complete) img.addEventListener("load", refresh, { once: true });
     requestAnimationFrame(refresh);
 
     return () => {
@@ -1120,23 +1085,10 @@ export function Journey() {
           />
           <div
             ref={truckRef}
-            className="absolute left-0 top-0 z-[8] h-0 overflow-visible [perspective:900px]"
+            className="absolute left-0 top-0 z-[8] h-0 overflow-visible"
             style={{ width: "var(--truck-w)" }}
           >
-            <img
-              ref={sideRef}
-              src="/brand/aw-truck.png"
-              alt=""
-              draggable={false}
-              className="pointer-events-none absolute bottom-0 left-0 h-auto w-full max-w-none select-none"
-              style={{
-                transformOrigin: "50% 100%",
-                transform: `translateX(-50%) translateY(${SIDE_BOTTOM_PAD * 100}%)`,
-              }}
-            />
-            <div ref={topRef} className="pointer-events-none absolute left-0 top-0 w-full opacity-0">
-              <TopTruck className="h-auto w-full" />
-            </div>
+            <TruckModel poseRef={poseRef} />
           </div>
         </div>
 
