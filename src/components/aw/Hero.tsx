@@ -117,7 +117,7 @@ export function Hero() {
       <div className="absolute inset-0 -z-10">
         <video
           className="h-full w-full object-cover object-[68%_center]"
-          src="/brand/hero-truck.mp4"
+          src="/brand/hero-main.mp4"
           poster={heroPoster}
           autoPlay
           muted
@@ -160,9 +160,6 @@ export function Hero() {
 
         <div className={cn("mt-7 flex flex-wrap gap-3", fade(5))}>
           <AwButton href="#quote">Request a Quote</AwButton>
-          <AwButton href="#track" arrow="↗">
-            Track Shipment
-          </AwButton>
         </div>
         </div>
       </div>

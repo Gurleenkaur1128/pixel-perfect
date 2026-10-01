@@ -56,7 +56,7 @@ export function Careers() {
       items.forEach((item, i) => {
         const weight = Math.max(0, 1 - Math.abs(focus - i));
         const active = weight > 0.55;
-        item.style.opacity = String(0.35 + weight * 0.65);
+        item.style.opacity = String(0.4 + weight * 0.6);
         item.style.borderColor = active ? "#F3692B" : "rgba(20,38,96,0.15)";
         const title = item.querySelector<HTMLElement>("h3");
         if (title) title.style.fontSize = active ? "22px" : "18px";
@@ -68,7 +68,7 @@ export function Careers() {
     const trigger = ScrollTrigger.create({
       trigger: root,
       start: "top top",
-      end: () => "+=1400",
+      end: () => "+=1320",
       pin,
       scrub: 0.25,
       anticipatePin: 1,
@@ -125,7 +125,7 @@ export function Careers() {
                   key={item.title}
                   data-career-item=""
                   className="border-l-2 pl-5 transition-[opacity,border-color] duration-[400ms]"
-                  style={{ opacity: i === 0 ? 1 : 0.34, borderColor: i === 0 ? "#F3692B" : "rgba(20,38,96,0.15)" }}
+                  style={{ opacity: i === 0 ? 1 : 0.4, borderColor: i === 0 ? "#F3692B" : "rgba(20,38,96,0.15)" }}
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-route">{item.index}</p>
                   <h3 className="display mt-1 text-[18px] text-[#142660] transition-all duration-[400ms]">{item.title}</h3>

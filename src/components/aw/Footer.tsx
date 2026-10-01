@@ -3,7 +3,7 @@ import { AwButton, Logo } from "@/components/aw/ui";
 const COLUMNS = [
   { title: "Services", links: ["B2B / LTL / Retail / Final Mile", "Blanket Wrap", "E-commerce and Home", "Pool Distribution", "Warehousing"] },
   { title: "Company", links: ["About Us", "Our Family of Carriers", "The American West Way", "News & Events"] },
-  { title: "Resources", links: ["Track Your Shipment", "Schedule a Pickup", "Request a Quote", "FAQs"] },
+  { title: "Resources", links: ["Schedule a Pickup", "Request a Quote", "FAQs"] },
   { title: "Contact", links: ["51 Zaca Lane, Suite 120", "San Luis Obispo, CA 93401", "(800) 788-4534"] },
 ];
 
@@ -13,14 +13,9 @@ export function Footer() {
       <div className="container-aw relative">
         <div className="flex flex-wrap items-end justify-between gap-6 border-b border-on-navy/10 pb-6">
           <Logo className="w-[140px] rounded-sm bg-white px-2 py-1 sm:w-[156px]" />
-          <div id="track" className="flex flex-wrap gap-3">
-            <AwButton href="#track" arrow="↗" compact>
-              Track Shipment
-            </AwButton>
-            <AwButton href="#quote" compact>
-              Request a Quote
-            </AwButton>
-          </div>
+          <AwButton href="#quote" compact>
+            Request a Quote
+          </AwButton>
         </div>
         <div className="grid gap-8 py-8 sm:grid-cols-2 lg:grid-cols-4">
           {COLUMNS.map((col) => (
@@ -30,7 +25,7 @@ export function Footer() {
                 {col.links.map((link) => (
                   <li key={link}>
                     <a
-                      href={link === "Track Your Shipment" ? "#track" : link === "Request a Quote" ? "#quote" : "#top"}
+                      href={link === "Request a Quote" ? "#quote" : "#top"}
                       className="text-sm text-on-navy/65 transition-colors duration-500 hover:text-on-navy"
                     >
                       {link}
