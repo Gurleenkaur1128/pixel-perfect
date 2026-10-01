@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import logoBlue from "@/assets/logo.png";
 import logoWhite from "@/assets/logo-white.png";
@@ -15,47 +15,34 @@ const LINKS = [
 export function Nav() {
   const y = useScrollY();
   const [open, setOpen] = useState(false);
-  const [heroHeight, setHeroHeight] = useState(800);
 
-  useEffect(() => {
-    const measure = () => setHeroHeight(window.innerHeight);
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
-
-  const solid = open || y > heroHeight - 72;
+  const solid = open || y > 8;
+  const logoSize = solid ? "w-[104px] sm:w-[118px]" : "w-[132px] sm:w-[168px]";
 
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b transition-[background-color,box-shadow,border-color,backdrop-filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        "fixed inset-x-0 top-0 z-50 border-b",
         solid
-          ? "border-[#142660]/10 bg-[rgba(255,255,255,0.92)] shadow-[0_8px_28px_rgba(20,38,96,0.06)] backdrop-blur-[14px]"
+          ? "border-[#142660]/10 bg-white shadow-[0_8px_28px_rgba(20,38,96,0.06)]"
           : "border-transparent bg-transparent shadow-none",
       )}
     >
-      <div className="container-aw flex items-center justify-between gap-4 py-2">
+      <div className={cn("container-aw flex items-center justify-between gap-4", solid ? "py-1" : "py-2")}>
         <a href="#top" aria-label="American West home" className="relative block shrink-0">
           <img
             src={logoWhite}
             alt=""
             width={1774}
             height={887}
-            className={cn(
-              "h-auto w-[132px] bg-transparent transition-opacity duration-700 sm:w-[168px]",
-              solid ? "opacity-0" : "opacity-100",
-            )}
+            className={cn("h-auto bg-transparent", logoSize, solid ? "opacity-0" : "opacity-100")}
           />
           <img
             src={logoBlue}
             alt="American West Worldwide Express, Inc."
             width={546}
             height={273}
-            className={cn(
-              "absolute inset-0 h-auto w-[132px] bg-transparent transition-opacity duration-700 sm:w-[168px]",
-              solid ? "opacity-100" : "opacity-0",
-            )}
+            className={cn("absolute inset-0 h-auto bg-transparent", logoSize, solid ? "opacity-100" : "opacity-0")}
           />
         </a>
 
@@ -65,7 +52,7 @@ export function Nav() {
               key={l.label}
               href={l.href}
               className={cn(
-                "group relative whitespace-nowrap py-1 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-500",
+                "group relative whitespace-nowrap py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
                 solid
                   ? "text-[#172033]/80 hover:text-[#2D419A]"
                   : "text-white drop-shadow-[0_1px_8px_rgba(16,28,72,0.45)] hover:text-white",
