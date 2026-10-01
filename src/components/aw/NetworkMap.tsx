@@ -76,8 +76,8 @@ export function NetworkMap() {
       <div
         ref={ref}
         className={cn(
-          "container-aw transition-[transform,opacity] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]",
-          inView ? "translate-y-0 opacity-100" : "translate-y-[120px] opacity-0",
+          "container-aw transition-[transform,opacity] duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+          inView ? "translate-y-0 opacity-100" : "translate-y-[80px] opacity-0",
         )}
       >
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">

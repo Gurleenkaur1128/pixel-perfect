@@ -140,6 +140,8 @@ type Anim = {
   shaped: number;
   /** Highest journey value used for card reveals. Cards stay once shown. */
   revealJ: number;
+  /** Camera lock once the truck drives into the exit mask. */
+  heldY: number | null;
 };
 
 type Pt = { x: number; y: number };
@@ -152,18 +154,6 @@ function smoothstep(e0: number, e1: number, x: number) {
   if (e1 === e0) return x >= e1 ? 1 : 0;
   const t = clamp((x - e0) / (e1 - e0), 0, 1);
   return t * t * (3 - 2 * t);
-}
-
-/** Where the Nationwide sheet should sit while the truck finishes behind it. */
-function handoffTop(journey: number, pinH: number, natural: number) {
-  const blend = smoothstep(0.74, 0.8, journey);
-  const rise = smoothstep(0.76, 0.84, journey);
-  const hold = smoothstep(0.84, 0.92, journey);
-  const cover = smoothstep(0.92, 1, journey);
-  let staged = pinH + (pinH * 0.5 - pinH) * rise;
-  if (journey >= 0.84) staged = pinH * 0.5 + (pinH * 0.34 - pinH * 0.5) * hold;
-  if (journey >= 0.92) staged = pinH * 0.34 * (1 - cover);
-  return natural * (1 - blend) + staged * blend;
 }
 
 function lerpAngle(a: number, b: number, u: number) {
@@ -380,6 +370,7 @@ export function Journey() {
   const eyebrowRef = useRef<HTMLParagraphElement>(null);
   const journeyHeadRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef<HTMLSpanElement>(null);
+  const exitMaskRef = useRef<HTMLDivElement>(null);
   const geoRef = useRef<Geo | null>(null);
   const animRef = useRef<Anim>({
     target: 0,
@@ -395,6 +386,7 @@ export function Journey() {
     lane: 0,
     shaped: 0,
     revealJ: 0,
+    heldY: null,
   });
 
   useLayoutEffect(() => {
@@ -442,6 +434,13 @@ export function Journey() {
       ];
       let roadStartHint = { x: 0, y: 0 };
       let curveY = 0;
+      let turn1 = { x: 0, y: 0 };
+      let vertX = w * 0.72;
+      let yJoin = h;
+      let yFirstStep = h;
+      let yLastStep = h;
+      let yStop = h;
+      let yEnd = h;
 
       if (mode === "mobile") {
         showBase = false;
@@ -500,43 +499,62 @@ export function Journey() {
         roadW = clamp(truckW * 0.62, mode === "desktop" ? 210 : 168, mode === "desktop" ? 280 : 220);
         const yCenter = yEdge;
 
-        let ry = clamp(Math.min(w, h) * 0.2, 150, 230);
-        let rx = ry * 1.38;
-        const vertX = Math.min(w - roadW / 2 - 56, w - truckW * 0.62 - 20);
-        let xA = vertX - rx;
-        const minHoriz = Math.max(w * 0.48, truckW * 1.15);
-        if (xA < minHoriz) {
-          rx = Math.max(130, vertX - minHoriz);
-          ry = rx / 1.38;
-          xA = vertX - rx;
+        vertX = Math.min(w - roadW / 2 - 48, w - truckW * 0.58 - 24);
+        const sweep1 = (50 * Math.PI) / 180;
+        const phiA = -Math.PI / 2;
+        const phiB = phiA + sweep1;
+        const phiC = 0;
+        let r1 = clamp(Math.min(w, h) * 0.22, 200, 300);
+        let r2 = clamp(r1 * 0.62, 140, 200);
+        let straight = clamp(Math.min(w, h) * 0.28, 280, 380);
+        const s1 = Math.sin(sweep1);
+        const c1s = Math.cos(sweep1);
+        const fit = () => {
+          const yJoin = yCenter + r2 * c1s + straight * s1 + r1 * (1 - c1s);
+          const p2x = vertX - r2 * (1 - s1);
+          const p1x = p2x - straight * c1s;
+          const p0x = p1x - r1 * s1;
+          return { yJoin, p0x, p1x, p2x };
+        };
+        let shaped = fit();
+        const minHoriz = Math.max(w * 0.42, truckW * 1.05);
+        while (shaped.p0x < minHoriz && r1 > 150) {
+          r1 -= 16;
+          r2 = clamp(r1 * 0.62, 120, 200);
+          straight = Math.max(180, straight - 16);
+          shaped = fit();
         }
-        const cy = yCenter + ry;
-        const phi0 = -Math.PI / 2;
-        const phiMid = Math.atan(-ry / rx);
-        const phi1 = 0;
-        const c1 = ellipseCubic(xA, cy, rx, ry, phi0, phiMid);
-        const c2 = ellipseCubic(xA, cy, rx, ry, phiMid, phi1);
-        const yCurveEnd = c2.p3.y;
-        curveY = c2.p3.y;
-        const stepGap = h < 760 ? 188 : 236;
-        const yFirstStep = yCurveEnd + 270;
-        const yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
-        const yStop = yLastStep + truckW * 0.15;
-        const yEnd = yStop + truckW * 0.78 + 48;
+        yJoin = shaped.yJoin;
+        const C2x = vertX - r2;
+        const C2y = yJoin;
+        const P2 = { x: C2x + r2 * s1, y: C2y - r2 * c1s };
+        const P1 = { x: P2.x - straight * c1s, y: P2.y - straight * s1 };
+        turn1 = P1;
+        const C1x = P1.x - r1 * s1;
+        const C1y = P1.y + r1 * c1s;
+        const P0 = { x: C1x, y: C1y - r1 };
+        const arc1 = ellipseCubic(C1x, C1y, r1, r1, phiA, phiB);
+        const arc2 = ellipseCubic(C2x, C2y, r2, r2, phiB, phiC);
+        curveY = yJoin;
+        const stepGap = h < 760 ? 176 : 214;
+        yFirstStep = yJoin + 188;
+        yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
+        const extra = 280;
+        yStop = yLastStep + extra;
+        yEnd = yStop + 340;
         const xStart = -0.25 * truckW;
+        const bend = `${cubicCmd(arc1)} L ${n(P2.x)} ${n(P2.y)} ${cubicCmd(arc2)}`;
 
-        motionD = `M ${n(xStart)} ${n(yCenter)} L ${n(c1.p0.x)} ${n(c1.p0.y)} ${cubicCmd(c1)} ${cubicCmd(c2)} L ${n(vertX)} ${n(yEnd)}`;
-        const roadStartX = Math.max(xStart + truckW, xA - Math.max(truckW * 1.05, 320));
-        roadD = `M ${n(roadStartX)} ${n(yCenter)} L ${n(c1.p0.x)} ${n(c1.p0.y)} ${cubicCmd(c1)} ${cubicCmd(c2)} L ${n(vertX)} ${n(yEnd)}`;
+        motionD = `M ${n(xStart)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
+        const roadStartX = Math.min(P0.x - 80, Math.max(xStart + truckW * 0.2, P0.x - Math.max(truckW * 0.9, 260)));
+        roadD = `M ${n(roadStartX)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
         roadStartHint = { x: roadStartX, y: yCenter };
 
-        const ang = Math.atan2(c1.p3.y - c1.p2.y, c1.p3.x - c1.p2.x);
-        const tx = Math.cos(ang);
-        const ty = Math.sin(ang);
+        const tang = Math.atan2(s1, c1s);
         chevron = {
-          x: c1.p3.x + ty * roadW * 0.2,
-          y: c1.p3.y - tx * roadW * 0.2,
-          a: ang,
+          x: P1.x + Math.sin(tang) * roadW * 0.16,
+          y: P1.y - Math.cos(tang) * roadW * 0.16,
+          a: tang,
         };
 
         shiftX = w / 2 - vertX;
@@ -567,7 +585,7 @@ export function Journey() {
         const headW = clamp(w * 0.26, 220, 360);
         if (journeyHeadRef.current) {
           journeyHeadRef.current.style.left = `${vertX - roadW / 2 - 40 - headW}px`;
-          journeyHeadRef.current.style.top = `${yCurveEnd + 28}px`;
+          journeyHeadRef.current.style.top = `${yJoin + 36}px`;
           journeyHeadRef.current.style.width = `${headW}px`;
         }
         if (watermarkRef.current) {
@@ -592,9 +610,9 @@ export function Journey() {
           });
         }
         delivered = {
-          x: vertX + roadW / 2 + 48,
+          x: vertX - 100,
           y: yStop,
-          t: 0.9,
+          t: 0.988,
           w: 210,
           side: "",
           enter: "y",
@@ -612,18 +630,6 @@ export function Journey() {
       const roadStartU = arcAt(samples, roadStartHint.x, roadStartHint.y);
 
       if (mode !== "mobile") {
-        let uTurn = -1;
-        let uVert = -1;
-        for (let i = 0; i < samples.length; i++) {
-          const sample = samples[i];
-          if (!sample) continue;
-          const u = i / (samples.length - 1);
-          if (uTurn < 0 && sample.a >= 0.75) uTurn = u;
-          if (sample.a >= 1.45) {
-            uVert = u;
-            break;
-          }
-        }
         let uFlat = 0.2;
         for (let i = 0; i < samples.length; i++) {
           const sample = samples[i];
@@ -631,16 +637,25 @@ export function Journey() {
           if (sample.a < 0.08) uFlat = i / (samples.length - 1);
           else break;
         }
-        if (uTurn < 0) uTurn = Math.min(0.9, uFlat + 0.04);
-        if (uVert < 0) uVert = Math.min(0.96, uTurn + 0.04);
-        const uStop = arcAt(samples, w / 2 - shiftX, delivered.y - Math.min(56, truckW * 0.14));
+        const after = (u: number, min: number) => Math.max(u, min + 0.004);
+        const u1 = after(arcAt(samples, turn1.x, turn1.y), uFlat);
+        const u2 = after(arcAt(samples, vertX, yJoin), u1);
+        const uSettle = after(arcAt(samples, vertX, yJoin + 56), u2);
+        const uCard0 = after(arcAt(samples, vertX, yFirstStep), uSettle);
+        const uCardN = after(arcAt(samples, vertX, yLastStep), uCard0);
+        const uExtra = after(arcAt(samples, vertX, yStop), uCardN);
+        const uEnd = after(arcAt(samples, vertX, yEnd), uExtra);
         markers = [
           { j: 0, u: 0 },
           { j: 0.06, u: 0 },
           { j: 0.5, u: uFlat },
-          { j: 0.58, u: Math.max(uFlat + 0.008, uTurn) },
-          { j: 0.68, u: Math.max(uTurn + 0.008, uVert) },
-          { j: 1, u: clamp(Math.max(uVert + 0.02, uStop), 0.8, 0.985) },
+          { j: 0.6, u: u1 },
+          { j: 0.68, u: u2 },
+          { j: 0.72, u: uSettle },
+          { j: 0.74, u: uCard0 },
+          { j: 0.9, u: uCardN },
+          { j: 0.97, u: uExtra },
+          { j: 1, u: uEnd },
         ];
       }
 
@@ -669,13 +684,14 @@ export function Journey() {
       });
       steps.forEach((pos, i) => {
         const earlier = steps[i - 1];
-        const floor = mode === "mobile" ? 0.5 : 0.7;
-        const prev = earlier ? earlier.t + 0.045 : floor;
-        pos.t = clamp(Math.max(pos.t, prev), floor, 0.96);
+        const floor = mode === "mobile" ? 0.5 : 0.745;
+        const prev = earlier ? earlier.t + 0.032 : floor;
+        const cap = mode === "mobile" ? 0.96 : 0.9;
+        pos.t = clamp(Math.max(pos.t, prev), floor, cap);
       });
       const lastStep = steps[steps.length - 1];
-      delivered.t = clamp((lastStep?.t ?? 0.9) + 0.02, 0.9, 0.96);
-      if (mode !== "mobile") delivered.t = 0.845;
+      delivered.t = clamp((lastStep?.t ?? 0.9) + 0.04, 0.9, 0.96);
+      if (mode !== "mobile") delivered.t = 0.988;
 
       if (laneLRef.current) laneLRef.current.setAttribute("d", offsetPath(road, roadW * 0.3));
       if (laneRRef.current) laneRRef.current.setAttribute("d", offsetPath(road, -roadW * 0.3));
@@ -739,8 +755,8 @@ export function Journey() {
         if (el.dataset["state"] === "off" || !el.dataset["state"]) {
           gsap.set(el, {
             opacity: 0,
-            x: pos.side === "left" ? -40 : pos.side === "right" ? 40 : 0,
-            y: pos.enter === "y" ? 28 : 0,
+            x: pos.side === "left" ? -50 : pos.side === "right" ? 50 : 0,
+            y: el.dataset["kind"] === "delivered" ? 18 : pos.enter === "y" ? 28 : 0,
             scale: 0.96,
           });
           el.dataset["state"] = "off";
@@ -770,13 +786,13 @@ export function Journey() {
         anim.lane = 0;
         anim.shaped = 0;
         anim.revealJ = 0;
+        anim.heldY = null;
         for (const el of stops) el.dataset["state"] = "off";
       }
       const net = document.querySelector<HTMLElement>(".aw-network");
       if (net) {
-        const pinH = pin.clientHeight || window.innerHeight;
-        const overlap = mode === "mobile" ? Math.round(scroll * 0.12) : Math.round(pinH);
-        net.style.marginTop = `-${overlap}px`;
+        net.style.marginTop = "0px";
+        net.style.transform = "";
       }
     };
 
@@ -813,6 +829,7 @@ export function Journey() {
           anim.lane = 0;
           anim.shaped = 0;
           anim.revealJ = 0;
+          anim.heldY = null;
           pin.querySelectorAll<HTMLElement>("[data-stop]").forEach((el) => {
             el.dataset["state"] = "off";
           });
@@ -836,9 +853,9 @@ export function Journey() {
       el.dataset["state"] = key;
       const side = el.dataset["side"];
       const enter = el.dataset["enter"];
-      const x = side === "left" ? -55 : side === "right" ? 55 : 0;
-      const y = enter === "y" ? 28 : 0;
-      const duration = kind === "delivered" ? 0.8 : kind === "step" ? 1.1 : 1.05;
+      const x = side === "left" ? -50 : side === "right" ? 50 : 0;
+      const y = kind === "delivered" ? 18 : enter === "y" ? 28 : 0;
+      const duration = kind === "delivered" ? 0.8 : kind === "step" ? 1 : 1.05;
       if (key === "off") {
         play(el, {
           opacity: 0,
@@ -885,7 +902,7 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.54, 0.66, journey);
+      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.67, journey);
       const drawY = pt.y;
       const dist = u * geo.total;
       const bob = Math.sin(dist * 0.028) * 0.65;
@@ -896,22 +913,28 @@ export function Journey() {
         anim.viewY = 0;
         anim.booted = true;
       } else {
-        anim.angle = lerpAngle(anim.angle, pt.a, 0.32);
+        anim.angle = lerpAngle(anim.angle, pt.a, 0.28);
       }
 
-      const pan = geo.mode === "mobile" ? 0 : smoothstep(0.66, 0.8, journey);
+      const pan = geo.mode === "mobile" ? 0 : smoothstep(0.6, 0.72, journey);
       const follow =
-        geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.58, 0.72, journey);
+        geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.7, 0.78, journey);
       const targetVX = geo.shiftX * pan;
       const pinH = pin.clientHeight || window.innerHeight;
-      const sink = geo.mode === "mobile" ? 0 : smoothstep(0.96, 1, journey);
-      const aim = geo.preferY + (pinH * 0.56 - geo.preferY) * sink;
+      const exit = geo.mode === "mobile" ? 0 : smoothstep(0.97, 0.985, journey);
+      const aim = geo.mode === "mobile" ? geo.preferY : pinH * 0.64;
       const locked = aim - (drawY + bob);
       let targetVY = locked < 0 ? locked * follow : 0;
-      if (geo.mode !== "mobile" && geo.curveY > 0) {
-        const keepBend = 96 - geo.yEdge;
-        const release = smoothstep(0.97, 1, journey);
-        if (targetVY < keepBend) targetVY = keepBend + (targetVY - keepBend) * release;
+      if (geo.mode !== "mobile" && geo.yEdge > 0) {
+        const keepBend = 250 - geo.yEdge;
+        const holdTurn = 1 - smoothstep(0.68, 0.74, journey);
+        if (holdTurn > 0) targetVY = keepBend * holdTurn + targetVY * (1 - holdTurn);
+      }
+      if (exit > 0.02) {
+        if (anim.heldY == null) anim.heldY = anim.viewY;
+        targetVY = anim.heldY;
+      } else if (journey < 0.96) {
+        anim.heldY = null;
       }
       anim.viewX += (targetVX - anim.viewX) * 0.14;
       anim.viewY += (targetVY - anim.viewY) * 0.16;
@@ -933,13 +956,13 @@ export function Journey() {
       const span = Math.max(0.0001, 1 - geo.roadStartU);
       const along = ((u - geo.roadStartU) / span) * geo.roadTotal;
       const nose = geo.truckW * (geo.mode === "mobile" ? 0.34 : 0.52);
-      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.58, journey);
+      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.49, 0.56, journey);
       const drawn = clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate;
       anim.revealed = Math.max(anim.revealed, drawn);
       if (anim.revealed > geo.roadTotal) anim.revealed = geo.roadTotal;
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
-      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
+      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.49, 0.56, journey);
       anim.lane = Math.max(anim.lane, laneFade);
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * anim.lane);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * anim.lane);
@@ -947,10 +970,10 @@ export function Journey() {
       if (baseRef.current && geo.showBase) {
         anim.shaped = Math.max(anim.shaped, journey);
         const shaped = anim.shaped;
-        const rise = smoothstep(0.5, 0.58, shaped);
-        const settle = smoothstep(0.58, 0.66, shaped);
-        const handoff = smoothstep(0.66, 0.76, shaped);
-        const retract = smoothstep(0.74, 0.86, shaped);
+        const rise = smoothstep(0.46, 0.52, shaped);
+        const settle = smoothstep(0.5, 0.58, shaped);
+        const handoff = smoothstep(0.56, 0.66, shaped);
+        const retract = smoothstep(0.99, 1, shaped);
         const clear = geo.truckW * SIDE_RATIO + 72;
         const risenTop = geo.yEdge - clear;
         const risenH = geo.baseH + clear;
@@ -982,20 +1005,21 @@ export function Journey() {
       };
       reveal("service");
       reveal("step");
-      const sheetPinH = pin.clientHeight || window.innerHeight;
-      const sheetProgress = anim.active ? anim.target : journey;
-      const naturalSheet = geo.scroll * (1 - sheetProgress);
-      const sheetTop = geo.mode === "mobile" ? sheetPinH + 40 : handoffTop(sheetProgress, sheetPinH, naturalSheet);
-      const net = document.querySelector<HTMLElement>(".aw-network");
-      if (net && geo.mode !== "mobile" && (anim.active || journey > 0.02)) {
-        net.style.transform = `translate3d(0, ${sheetTop - naturalSheet}px, 0)`;
+      const hide = geo.mode === "mobile" ? 0 : smoothstep(0.968, 0.982, journey);
+      if (exitMaskRef.current) {
+        const width = geo.roadW + 36;
+        const left = pt.x + anim.viewX - width / 2;
+        exitMaskRef.current.style.opacity = hide > 0.01 ? "1" : "0";
+        exitMaskRef.current.style.height = `${Math.round(hide * Math.min(320, pinH * 0.38))}px`;
+        exitMaskRef.current.style.width = `${width}px`;
+        exitMaskRef.current.style.left = `${left}px`;
       }
       const deliveredEl = pin.querySelector<HTMLElement>("[data-kind='delivered']");
       if (deliveredEl) {
         if (geo.mode !== "mobile") {
           const pinW = pin.clientWidth || window.innerWidth;
-          const x = Math.min(pt.x + anim.viewX + geo.roadW * 0.5 + 28, pinW - 230);
-          const y = Math.min(sheetPinH * 0.18, Math.max(118, sheetTop - 168));
+          const x = clamp(pt.x + anim.viewX - 96, 24, pinW - 230);
+          const y = pinH * 0.46;
           deliveredEl.style.left = `${x}px`;
           deliveredEl.style.top = `${y}px`;
         }
@@ -1003,11 +1027,11 @@ export function Journey() {
       }
 
       if (servicesLayerRef.current) {
-        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, revealJ) : smoothstep(0.5, 0.56, revealJ);
+        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, revealJ) : smoothstep(0.46, 0.52, revealJ);
         servicesLayerRef.current.style.opacity = geo.mode === "mobile" ? "1" : String(1 - leave);
       }
 
-      const wmFade = geo.mode === "mobile" ? 1 - smoothstep(0.05, 0.2, revealJ) : 1 - smoothstep(0.5, 0.6, revealJ);
+      const wmFade = geo.mode === "mobile" ? 1 - smoothstep(0.05, 0.2, revealJ) : 1 - smoothstep(0.46, 0.54, revealJ);
       const drift = geo.mode === "mobile" ? 0 : -smoothstep(0.1, 0.5, journey) * geo.truckW * 1.15;
       if (watermarkRef.current) {
         watermarkRef.current.style.opacity = String(wmFade);
@@ -1016,7 +1040,7 @@ export function Journey() {
       if (eyebrowRef.current) eyebrowRef.current.style.opacity = String(0.85 * wmFade);
 
       const headIn =
-        geo.mode === "mobile" ? smoothstep(0.48, 0.58, revealJ) : smoothstep(0.66, 0.74, revealJ);
+        geo.mode === "mobile" ? smoothstep(0.48, 0.58, revealJ) : smoothstep(0.72, 0.76, revealJ);
       if (journeyHeadRef.current) {
         journeyHeadRef.current.style.opacity = String(headIn);
         journeyHeadRef.current.style.transform = `translateY(${(1 - headIn) * 16}px)`;
@@ -1188,6 +1212,12 @@ export function Journey() {
             <TruckModel poseRef={poseRef} />
           </div>
         </div>
+
+        <div
+          ref={exitMaskRef}
+          className="pointer-events-none absolute bottom-0 z-20 bg-white opacity-0"
+          aria-hidden="true"
+        />
 
         <div
           data-stop=""
