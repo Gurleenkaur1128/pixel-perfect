@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { TruckModel } from "./TruckModel";
 import gsap from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -56,32 +57,11 @@ const MILESTONES = [
   },
 ];
 
-function TopTruck({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 240 78" className={className} aria-hidden="true">
-      <rect x="8" y="14" width="148" height="50" rx="3" fill="#F7F8FC" stroke="#2D419A" strokeWidth="2" />
-      {Array.from({ length: 9 }).map((_, i) => (
-        <path key={i} d={`M${22 + i * 14} 16 V62`} stroke="#2D419A" strokeOpacity="0.18" strokeWidth="1" />
-      ))}
-      <rect x="8" y="34" width="148" height="6" fill="#F3692B" />
-      <rect x="8" y="46" width="148" height="18" fill="#2D419A" />
-      <path d="M156 18 H198 L226 34 V60 H156 Z" fill="#2D419A" />
-      <path d="M188 26 H210 L222 36 V42 H188 Z" fill="#E7ECFA" />
-      <rect x="28" y="6" width="18" height="9" rx="2" fill="#172033" />
-      <rect x="28" y="63" width="18" height="9" rx="2" fill="#172033" />
-      <rect x="78" y="6" width="18" height="9" rx="2" fill="#172033" />
-      <rect x="78" y="63" width="18" height="9" rx="2" fill="#172033" />
-      <rect x="196" y="6" width="16" height="9" rx="2" fill="#172033" />
-      <rect x="196" y="63" width="16" height="9" rx="2" fill="#172033" />
-    </svg>
-  );
-}
-
 export function Journey() {
   const rootRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const lightRef = useRef<HTMLDivElement>(null);
-  const sideTruckRef = useRef<HTMLImageElement>(null);
+  const sideTruckRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const roadRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -253,12 +233,9 @@ export function Journey() {
               <p className="eyebrow text-route">04 / The route</p>
               <h2 className="display mt-3 text-[clamp(38px,4.5vw,64px)] text-primary">Our Services</h2>
             </div>
-            <img
-              ref={sideTruckRef}
-              src="/brand/aw-truck.png"
-              alt=""
-              className="absolute bottom-1 left-0 z-10 h-auto w-[clamp(200px,17vw,260px)] max-w-none select-none"
-            />
+            <div ref={sideTruckRef} className="absolute bottom-1 left-0 z-10 w-[clamp(200px,17vw,260px)] select-none">
+              <TruckModel />
+            </div>
             <div className="absolute inset-x-0 bottom-0 z-[5] h-4 bg-[#142660]">
               <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/70" />
             </div>
@@ -316,7 +293,7 @@ export function Journey() {
             ref={topTruckRef}
             className="absolute left-0 top-0 z-10 w-[clamp(200px,15vw,230px)] opacity-0"
           >
-            <TopTruck className="h-auto w-full" />
+            <TruckModel view="top" />
           </div>
 
           <div className="js-mile-title absolute left-[3.5%] z-20 w-[min(24rem,calc(var(--road-x)-18%))] opacity-0" style={{ top: "var(--mile-top)" }}>
@@ -362,11 +339,9 @@ export function Journey() {
         <div className="container-aw">
           <p className="eyebrow text-route">04 / The route</p>
           <h2 className="display mt-3 text-[clamp(38px,8vw,52px)] text-primary">Our Services</h2>
-          <img
-            src="/brand/aw-truck.png"
-            alt="American West truck"
-            className="mt-6 h-auto w-[min(240px,70vw)]"
-          />
+          <div className="mt-6 w-[min(240px,70vw)]">
+            <TruckModel />
+          </div>
           <div className="mt-8 divide-y divide-[#142660]/12 border-y border-[#142660]/12">
             {SERVICES.map((service) => {
               const Icon = service.icon;
