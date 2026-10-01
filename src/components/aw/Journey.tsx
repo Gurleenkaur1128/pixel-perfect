@@ -322,18 +322,18 @@ function StopCopy({
           strokeWidth={1.6}
           aria-hidden="true"
         />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-route">{index}</span>
+        <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-route">{index}</span>
       </div>
       <h3
-        className={`display mt-2 leading-[1.05] tracking-wide text-balance ${
-          mile ? "text-[20px]" : "text-[17px]"
+        className={`display mt-2 leading-[1.15] tracking-wide text-balance ${
+          mile ? "text-[21px]" : "text-[19px]"
         } ${light ? "text-current" : "text-[#142660]"}`}
       >
         {title}
       </h3>
       <p
-        className={`mt-2 leading-relaxed ${
-          mile ? "text-[15px]" : "text-[14px]"
+        className={`mt-2 leading-[1.55] ${
+          mile ? "text-[15px]" : "text-[15px]"
         } ${light ? "text-current opacity-75" : "text-[#172033]/75"}`}
       >
         {text}
@@ -521,16 +521,16 @@ export function Journey() {
 
         shiftX = w / 2 - vertX;
         preferY = h * 0.5;
-        scroll = Math.round(clamp(h * (mode === "tablet" ? 5.1 : 5.6), 4600, 6400));
+        scroll = Math.round(clamp(h * (mode === "tablet" ? 7.6 : 8.6), 6800, 9000));
 
-        const padX = clamp(w * 0.05, 64, 90);
-        const gapX = clamp(w * 0.046, 56, 72);
-        const gapY = h < 820 ? 34 : 42;
+        const padX = clamp(w * 0.062, 72, 96);
+        const gapX = 64;
+        const gapY = h < 800 ? 28 : 40;
         const gridW = w - padX * 2;
         const cardW = (gridW - gapX * 2) / 3;
         const gridLeft = (w - gridW) / 2;
-        const gridTop = yEdge + (h < 760 ? 22 : 36);
-        const rowH = h < 820 ? 118 : 148;
+        const gridTop = yEdge + (h < 800 ? 16 : 28);
+        const rowH = mode === "tablet" ? 172 : h < 820 ? 138 : 156;
         for (let i = 0; i < SERVICES.length; i++) {
           const col = i % 3;
           const row = Math.floor(i / 3);
@@ -555,7 +555,7 @@ export function Journey() {
           watermarkRef.current.style.fontSize = `${clamp(w * 0.15, 96, 220)}px`;
         }
 
-        const stepW = clamp(mode === "desktop" ? 252 : 210, 200, 280);
+        const stepW = clamp(mode === "desktop" ? 260 : 240, 220, 280);
         const rightX = vertX + roadW / 2 + 44;
         const leftX = vertX - roadW / 2 - 44 - stepW;
         for (let i = 0; i < STEPS.length; i++) {
@@ -616,10 +616,10 @@ export function Journey() {
         const uStop = arcAt(samples, w / 2 - shiftX, delivered.y - Math.min(56, truckW * 0.14));
         markers = [
           { j: 0, u: 0 },
-          { j: 0.08, u: 0 },
-          { j: 0.55, u: uFlat },
-          { j: 0.64, u: Math.max(uFlat + 0.008, uTurn) },
-          { j: 0.72, u: Math.max(uTurn + 0.008, uVert) },
+          { j: 0.05, u: 0 },
+          { j: 0.48, u: uFlat },
+          { j: 0.56, u: Math.max(uFlat + 0.008, uTurn) },
+          { j: 0.66, u: Math.max(uTurn + 0.008, uVert) },
           { j: 1, u: clamp(Math.max(uVert + 0.02, uStop), 0.8, 0.985) },
         ];
       }
@@ -640,7 +640,7 @@ export function Journey() {
       steps.forEach((pos) => place(pos, "step"));
       services.forEach((pos, i) => {
         if (mode !== "mobile") {
-          pos.t = 0.1 + i * 0.042;
+          pos.t = 0.08 + i * 0.06;
           return;
         }
         const earlier = services[i - 1];
@@ -649,13 +649,13 @@ export function Journey() {
       });
       steps.forEach((pos, i) => {
         const earlier = steps[i - 1];
-        const floor = mode === "mobile" ? 0.5 : 0.74;
-        const prev = earlier ? earlier.t + 0.03 : floor;
+        const floor = mode === "mobile" ? 0.5 : 0.7;
+        const prev = earlier ? earlier.t + 0.045 : floor;
         pos.t = clamp(Math.max(pos.t, prev), floor, 0.96);
       });
       const lastStep = steps[steps.length - 1];
       delivered.t = clamp((lastStep?.t ?? 0.9) + 0.02, 0.9, 0.96);
-      if (mode !== "mobile") delivered.t = 0.9;
+      if (mode !== "mobile") delivered.t = Math.max(delivered.t, 0.92);
 
       if (laneLRef.current) laneLRef.current.setAttribute("d", offsetPath(road, roadW * 0.3));
       if (laneRRef.current) laneRRef.current.setAttribute("d", offsetPath(road, -roadW * 0.3));
@@ -796,8 +796,8 @@ export function Journey() {
       const side = el.dataset["side"];
       const enter = el.dataset["enter"];
       const x = side === "left" ? -55 : side === "right" ? 55 : 0;
-      const y = enter === "y" ? 28 : 0;
-      const duration = kind === "delivered" ? 0.8 : kind === "step" ? 1 : 0.95;
+      const y = enter === "y" ? 30 : 0;
+      const duration = kind === "delivered" ? 0.8 : kind === "step" ? 1.1 : 1.05;
       if (key === "off") {
         play(el, {
           opacity: 0,
@@ -806,6 +806,16 @@ export function Journey() {
           scale: 0.96,
           duration: 0.45,
           ease: "power2.inOut",
+          overwrite: "auto",
+        });
+      } else if (key === "past") {
+        play(el, {
+          opacity: kind === "service" ? 0.62 : 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          ease: "power2.out",
           overwrite: "auto",
         });
       } else {
@@ -834,7 +844,7 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
+      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.64, journey);
       const drawY = pt.y;
       const dist = u * geo.total;
       const bob = Math.sin(dist * 0.028) * 0.65;
@@ -845,12 +855,12 @@ export function Journey() {
         anim.viewY = 0;
         anim.booted = true;
       } else {
-        anim.angle = lerpAngle(anim.angle, pt.a, 0.5);
+        anim.angle = lerpAngle(anim.angle, pt.a, 0.32);
       }
 
-      const pan = geo.mode === "mobile" ? 0 : smoothstep(0.62, 0.78, journey);
+      const pan = geo.mode === "mobile" ? 0 : smoothstep(0.64, 0.78, journey);
       const follow =
-        geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.44, 0.6, journey);
+        geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.56, 0.7, journey);
       const targetVX = geo.shiftX * pan;
       const pinH = pin.clientHeight || window.innerHeight;
       const sink = geo.mode === "mobile" ? 0 : smoothstep(0.94, 1, journey);
@@ -859,7 +869,7 @@ export function Journey() {
       let targetVY = locked < 0 ? locked * follow : 0;
       if (geo.mode !== "mobile" && geo.curveY > 0) {
         const keepBend = 96 - geo.yEdge;
-        const release = smoothstep(0.8, 0.93, journey);
+        const release = smoothstep(0.68, 0.82, journey);
         if (targetVY < keepBend) targetVY = keepBend + (targetVY - keepBend) * release;
       }
       anim.viewX += (targetVX - anim.viewX) * 0.14;
@@ -882,21 +892,21 @@ export function Journey() {
       const span = Math.max(0.0001, 1 - geo.roadStartU);
       const along = ((u - geo.roadStartU) / span) * geo.roadTotal;
       const nose = geo.truckW * (geo.mode === "mobile" ? 0.34 : 0.52);
-      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.56, journey);
+      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.58, journey);
       const drawn = clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate;
       anim.revealed = Math.max(anim.revealed, drawn);
       if (anim.revealed > geo.roadTotal) anim.revealed = geo.roadTotal;
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
-      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.48, 0.57, journey);
+      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * laneFade);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * laneFade);
 
       if (baseRef.current && geo.showBase) {
-        const rise = smoothstep(0.4, 0.5, journey);
-        const settle = smoothstep(0.5, 0.58, journey);
-        const handoff = smoothstep(0.6, 0.7, journey);
-        const retract = smoothstep(0.68, 0.8, journey);
+        const rise = smoothstep(0.5, 0.58, journey);
+        const settle = smoothstep(0.58, 0.66, journey);
+        const handoff = smoothstep(0.66, 0.76, journey);
+        const retract = smoothstep(0.74, 0.86, journey);
         const clear = geo.truckW * SIDE_RATIO + 72;
         const risenTop = geo.yEdge - clear;
         const risenH = geo.baseH + clear;
@@ -940,12 +950,12 @@ export function Journey() {
       }
 
       if (servicesLayerRef.current) {
-        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, journey) : smoothstep(0.46, 0.58, journey);
+        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, journey) : smoothstep(0.455, 0.52, journey);
         servicesLayerRef.current.style.opacity = geo.mode === "mobile" ? "1" : String(1 - leave);
       }
 
-      const wmFade = geo.mode === "mobile" ? 1 - smoothstep(0.05, 0.2, journey) : 1 - smoothstep(0.4, 0.54, journey);
-      const drift = geo.mode === "mobile" ? 0 : -smoothstep(0.08, 0.52, journey) * geo.truckW * 1.15;
+      const wmFade = geo.mode === "mobile" ? 1 - smoothstep(0.05, 0.2, journey) : 1 - smoothstep(0.48, 0.6, journey);
+      const drift = geo.mode === "mobile" ? 0 : -smoothstep(0.1, 0.5, journey) * geo.truckW * 1.15;
       if (watermarkRef.current) {
         watermarkRef.current.style.opacity = String(wmFade);
         watermarkRef.current.style.transform = `translate3d(${drift}px, -50%, 0)`;
@@ -953,7 +963,7 @@ export function Journey() {
       if (eyebrowRef.current) eyebrowRef.current.style.opacity = String(0.85 * wmFade);
 
       const headIn =
-        geo.mode === "mobile" ? smoothstep(0.48, 0.58, journey) : smoothstep(0.68, 0.74, journey);
+        geo.mode === "mobile" ? smoothstep(0.48, 0.58, journey) : smoothstep(0.66, 0.74, journey);
       if (journeyHeadRef.current) {
         journeyHeadRef.current.style.opacity = String(headIn);
         journeyHeadRef.current.style.transform = `translateY(${(1 - headIn) * 16}px)`;

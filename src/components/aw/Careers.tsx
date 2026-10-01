@@ -51,15 +51,15 @@ export function Careers() {
       images.forEach((image, i) => {
         const weight = Math.max(0, 1 - Math.abs(focus - i));
         image.style.opacity = String(weight);
-        image.style.transform = `scale(${1.04 - weight * 0.04})`;
+        image.style.transform = `scale(${1.03 - weight * 0.03})`;
       });
       items.forEach((item, i) => {
         const weight = Math.max(0, 1 - Math.abs(focus - i));
         const active = weight > 0.55;
-        item.style.opacity = String(0.34 + weight * 0.66);
+        item.style.opacity = String(0.35 + weight * 0.65);
         item.style.borderColor = active ? "#F3692B" : "rgba(20,38,96,0.15)";
         const title = item.querySelector<HTMLElement>("h3");
-        if (title) title.style.fontSize = active ? "26px" : "20px";
+        if (title) title.style.fontSize = active ? "22px" : "18px";
         const copy = item.querySelector<HTMLElement>("p:last-of-type");
         if (copy) copy.style.opacity = active ? "1" : "0.65";
       });
@@ -68,9 +68,9 @@ export function Careers() {
     const trigger = ScrollTrigger.create({
       trigger: root,
       start: "top top",
-      end: () => `+=${Math.round(window.innerHeight * 2.4)}`,
+      end: () => "+=1400",
       pin,
-      scrub: 0.6,
+      scrub: 0.25,
       anticipatePin: 1,
       onUpdate: (self) => apply(self.progress),
     });
@@ -108,7 +108,7 @@ export function Careers() {
                 data-career-image=""
                 src={item.image}
                 alt={item.alt}
-                className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                 style={{ opacity: i === 0 ? 1 : 0, transform: "scale(1)" }}
               />
             ))}
@@ -124,11 +124,11 @@ export function Careers() {
                 <li
                   key={item.title}
                   data-career-item=""
-                  className="border-l-2 pl-5 transition-[opacity,border-color] duration-700"
+                  className="border-l-2 pl-5 transition-[opacity,border-color] duration-[400ms]"
                   style={{ opacity: i === 0 ? 1 : 0.34, borderColor: i === 0 ? "#F3692B" : "rgba(20,38,96,0.15)" }}
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-route">{item.index}</p>
-                  <h3 className="display mt-1 text-[20px] text-[#142660] transition-all duration-700">{item.title}</h3>
+                  <h3 className="display mt-1 text-[18px] text-[#142660] transition-all duration-[400ms]">{item.title}</h3>
                   <p className="mt-2 max-w-md text-[15px] leading-relaxed text-[#172033]/75">{item.text}</p>
                 </li>
               ))}

@@ -1,4 +1,4 @@
-import { Logo } from "@/components/aw/ui";
+import { AwButton, Logo } from "@/components/aw/ui";
 
 const COLUMNS = [
   { title: "Services", links: ["B2B / LTL / Retail / Final Mile", "Blanket Wrap", "E-commerce and Home", "Pool Distribution", "Warehousing"] },
@@ -9,26 +9,30 @@ const COLUMNS = [
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-navy-deep pb-8 pt-14 text-on-navy">
-      <span className="display pointer-events-none absolute inset-x-0 bottom-2 select-none whitespace-nowrap text-center text-[11vw] leading-none text-on-navy/[0.04]">
-        American West
-      </span>
+    <footer id="quote" className="relative overflow-hidden bg-navy-deep pb-6 pt-10 text-on-navy">
       <div className="container-aw relative">
-        <div className="flex flex-wrap items-end justify-between gap-8 border-b border-on-navy/10 pb-8">
+        <div className="flex flex-wrap items-end justify-between gap-6 border-b border-on-navy/10 pb-6">
           <Logo className="w-[140px] rounded-sm bg-white px-2 py-1 sm:w-[156px]" />
-          <p className="max-w-xs text-sm leading-relaxed text-on-navy/60">
-            Specialized furniture transportation, warehousing and final-mile delivery across the
-            United States.
-          </p>
+          <div id="track" className="flex flex-wrap gap-3">
+            <AwButton href="#track" arrow="↗" compact>
+              Track Shipment
+            </AwButton>
+            <AwButton href="#quote" compact>
+              Request a Quote
+            </AwButton>
+          </div>
         </div>
-        <div className="grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 py-8 sm:grid-cols-2 lg:grid-cols-4">
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <p className="eyebrow text-route">{col.title}</p>
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
                   <li key={link}>
-                    <a href="#top" className="text-sm text-on-navy/65 transition-colors duration-500 hover:text-on-navy">
+                    <a
+                      href={link === "Track Your Shipment" ? "#track" : link === "Request a Quote" ? "#quote" : "#top"}
+                      className="text-sm text-on-navy/65 transition-colors duration-500 hover:text-on-navy"
+                    >
                       {link}
                     </a>
                   </li>
