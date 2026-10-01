@@ -3,38 +3,25 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-type Tone = "orange" | "blue" | "ghost-light" | "ghost-dark";
-
 export function AwButton({
   children,
-  tone = "orange",
   className,
   href = "#quote",
   arrow = "→",
+  compact = false,
+  onClick,
 }: {
   children: ReactNode;
-  tone?: Tone;
   className?: string;
   href?: string;
   arrow?: string;
+  compact?: boolean;
+  onClick?: () => void;
 }) {
-  const tones: Record<Tone, string> = {
-    orange: "bg-route text-on-navy hover:bg-route/90",
-    blue: "bg-primary text-primary-foreground hover:bg-navy",
-    "ghost-light": "border border-on-navy/40 text-on-navy hover:border-route hover:text-route",
-    "ghost-dark": "border border-ink/25 text-ink hover:border-primary hover:text-primary",
-  };
   return (
-    <a
-      href={href}
-      className={cn(
-        "group inline-flex items-center gap-2.5 rounded-sm px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-500",
-        tones[tone],
-        className,
-      )}
-    >
+    <a href={href} onClick={onClick} className={cn("aw-glow", compact && "aw-glow-compact", className)}>
       <span>{children}</span>
-      <span className="arrow-slide group-hover:translate-x-1.5">{arrow}</span>
+      {arrow ? <span className="aw-glow-arrow" aria-hidden="true">{arrow}</span> : null}
     </a>
   );
 }
