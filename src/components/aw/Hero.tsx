@@ -1,17 +1,99 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import heroPoster from "@/assets/hero-highway.jpg";
 import { AwButton } from "@/components/aw/ui";
 import { cn } from "@/lib/utils";
 
 const CITIES = [
-  { name: "Los Angeles", x: 6 },
-  { name: "Dallas", x: 36 },
-  { name: "Chicago", x: 64 },
-  { name: "New York", x: 94 },
+  { name: "Los Angeles", t: 0.08 },
+  { name: "Dallas", t: 0.37 },
+  { name: "Chicago", t: 0.64 },
+  { name: "New York", t: 0.92 },
 ];
 
-const ROUTE = "M 72 60 C 250 60 330 100 432 92 C 560 82 640 30 768 36 C 900 42 1000 70 1128 56";
+const ROUTE = "M 36 34 C 220 34 340 52 600 40 C 860 28 1000 24 1164 38";
+
+function HeroRoute({ show }: { show: boolean }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
+  const [points, setPoints] = useState<{ name: string; x: number; y: number }[]>([]);
+
+  useLayoutEffect(() => {
+    const svg = svgRef.current;
+    const path = pathRef.current;
+    if (!svg || !path) return;
+
+    const measure = () => {
+      const length = path.getTotalLength();
+      const box = svg.getBoundingClientRect();
+      const view = svg.viewBox.baseVal;
+      if (!box.width || !view.width) return;
+      setPoints(
+        CITIES.map((city) => {
+          const point = path.getPointAtLength(length * city.t);
+          return {
+            name: city.name,
+            x: (point.x / view.width) * box.width,
+            y: (point.y / view.height) * box.height,
+          };
+        }),
+      );
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(svg);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-3 hidden md:block">
+      <div className="container-aw">
+        <div className="relative h-[4.5rem]">
+          <svg
+            ref={svgRef}
+            viewBox="0 0 1200 72"
+            preserveAspectRatio="xMidYMid meet"
+            className="absolute inset-0 h-full w-full overflow-visible"
+            aria-hidden="true"
+          >
+            <path
+              ref={pathRef}
+              d={ROUTE}
+              fill="none"
+              stroke="var(--route)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              style={{
+                strokeDasharray: 1400,
+                strokeDashoffset: show ? 0 : 1400,
+                transition: "stroke-dashoffset 2200ms cubic-bezier(0.16,1,0.3,1)",
+              }}
+            />
+          </svg>
+          {points.map((point) => (
+            <div
+              key={point.name}
+              className="absolute -translate-x-1/2"
+              style={{
+                left: point.x,
+                top: point.y,
+                opacity: show ? 1 : 0,
+                transition: "opacity 800ms ease",
+              }}
+            >
+              <span className="mx-auto block h-2 w-2 -translate-y-1/2 rounded-full bg-route ring-4 ring-route/25" />
+              <span className="mt-2 block whitespace-nowrap text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-on-navy/80">
+                {point.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Hero() {
   const [stage, setStage] = useState(0);
@@ -85,47 +167,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Signature route line — static, no truck */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-2">
-        <div className="container-aw relative">
-          <div className="relative hidden h-[4.75rem] md:block">
-            <svg viewBox="0 0 1200 110" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
-              <path
-                d={ROUTE}
-                fill="none"
-                stroke="var(--route)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                opacity="0.7"
-                vectorEffect="non-scaling-stroke"
-                style={{
-                  strokeDasharray: 1400,
-                  strokeDashoffset: on(5) ? 0 : 1400,
-                  transition: "stroke-dashoffset 2400ms cubic-bezier(0.16,1,0.3,1)",
-                }}
-              />
-            </svg>
-            {CITIES.map((c, i) => (
-              <div
-                key={c.name}
-                className={cn("absolute top-0 -translate-x-1/2 transition-opacity duration-1000", on(5) ? "opacity-100" : "opacity-0")}
-                style={{ left: `${c.x}%`, top: i % 2 ? "46%" : "8%", transitionDelay: `${500 + i * 250}ms` }}
-              >
-                <span className="mx-auto block h-2 w-2 rounded-full bg-route ring-4 ring-route/20" />
-                <span className="mt-2.5 block whitespace-nowrap text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-on-navy/60">
-                  {c.name}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 flex items-center gap-3 text-on-navy/70 md:absolute md:-top-16 md:left-10">
-            <span className="relative h-10 w-px overflow-hidden bg-on-navy/25">
-              <span className="absolute inset-x-0 top-0 h-4 animate-[scroll-cue_2.4s_ease-in-out_infinite] bg-route" />
-            </span>
-            <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.24em]">Scroll</span>
-          </div>
-        </div>
-      </div>
+      <HeroRoute show={on(5)} />
     </section>
   );
 }

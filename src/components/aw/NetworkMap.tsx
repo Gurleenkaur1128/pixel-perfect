@@ -5,6 +5,7 @@ import us from "us-atlas/states-albers-10m.json";
 
 import { SectionLabel } from "@/components/aw/ui";
 import { useInView } from "@/hooks/use-reveal";
+import { cn } from "@/lib/utils";
 
 const topo = us as unknown as Topology<{ states: GeometryCollection; nation: GeometryCollection }>;
 const path = geoPath();
@@ -45,7 +46,7 @@ const ROUTES = [
 const STATS = [
   { v: "48", l: "Contiguous states" },
   { v: "100+", l: "Years combined experience" },
-  { v: "Furniture", l: "Specialized delivery" },
+  { v: "Furniture", l: "Specialized furniture delivery" },
 ];
 
 function MapTruck({ href, dur, begin }: { href: string; dur: number; begin: number }) {
@@ -54,7 +55,7 @@ function MapTruck({ href, dur, begin }: { href: string; dur: number; begin: numb
       <animateMotion dur={`${dur}s`} begin={`${begin}s`} rotate="auto" repeatCount="indefinite">
         <mpath href={href} />
       </animateMotion>
-      <g transform="scale(1.45)">
+      <g transform="scale(1.15)">
         <rect x="-16" y="-5" width="20" height="10" rx="1" fill="#ffffff" stroke="#2D419A" strokeWidth="0.8" />
         <rect x="-16" y="-0.8" width="20" height="2" fill="#F3692B" />
         <path d="M4 -4 H10 L14.5 0 V5 H4 Z" fill="#2D419A" />
@@ -71,8 +72,14 @@ export function NetworkMap() {
   const { ref, inView } = useInView<HTMLDivElement>(0.2);
 
   return (
-    <section id="network" className="relative overflow-hidden bg-navy py-16 text-on-navy lg:py-20">
-      <div className="container-aw">
+    <section id="network" className="aw-network relative overflow-hidden bg-navy py-14 text-on-navy lg:py-16">
+      <div
+        ref={ref}
+        className={cn(
+          "container-aw transition-[transform,opacity] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          inView ? "translate-y-0 opacity-100" : "translate-y-[120px] opacity-0",
+        )}
+      >
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
           <div>
             <SectionLabel index="03 /" label="Nationwide" />
@@ -86,8 +93,13 @@ export function NetworkMap() {
           </p>
         </div>
 
-        <div ref={ref} className="relative mx-auto mt-8 w-full max-w-[800px]">
-          <svg viewBox="0 0 975 610" className="h-auto w-full" role="img" aria-label="Map of the continental United States with American West delivery routes">
+        <div
+          className={cn(
+            "relative mx-auto mt-8 w-full max-w-[800px] origin-center transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            inView ? "scale-100" : "scale-[1.03]",
+          )}
+        >
+          <svg viewBox="0 0 975 610" className="mx-auto h-auto w-full max-h-[min(52vh,460px)]" role="img" aria-label="Map of the continental United States with American West delivery routes">
             <defs>
               <filter id="aw-route-glow" x="-30%" y="-30%" width="160%" height="160%">
                 <feGaussianBlur stdDeviation="3.2" />
@@ -132,7 +144,7 @@ export function NetworkMap() {
                     transition: `stroke-dashoffset 1800ms cubic-bezier(0.16,1,0.3,1) ${500 + i * 200}ms`,
                   }}
                 />
-                {inView && active && <MapTruck href={`#nr-${i}`} dur={r.dur} begin={1.6 + i * 0.45} />}
+                {inView && active && <MapTruck href={`#nr-${i}`} dur={r.dur} begin={-i * 2.2} />}
               </g>
             );})}
 
@@ -166,7 +178,7 @@ export function NetworkMap() {
         <div className="mt-10 grid border-t border-on-navy/15 sm:grid-cols-3">
           {STATS.map((s, i) => (
             <div key={s.l} className={i ? "border-on-navy/15 pt-6 sm:border-l sm:pl-8" : "pt-6"}>
-              <p className="display text-[clamp(1.75rem,3vw,2.5rem)] text-route">{s.v}</p>
+              <p className="display text-[clamp(1.6rem,2.4vw,2.15rem)] text-route">{s.v}</p>
               <p className="eyebrow mt-2 text-on-navy/70">{s.l}</p>
             </div>
           ))}

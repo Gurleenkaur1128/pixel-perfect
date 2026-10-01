@@ -54,6 +54,8 @@ export function TruckModel({ poseRef }: { poseRef: RefObject<TruckPose> }) {
       const tires: { obj: InstanceType<typeof THREE.Object3D>; axis: "x" | "y" | "z"; base: number }[] = [];
       let groundFrac = 0.28;
       const SPAN = 1.08;
+      const targetQuat = new THREE.Quaternion();
+      const targetEuler = new THREE.Euler();
       const draw = () => {
         if (cancelled || !model) return;
         const width = host!.clientWidth;
@@ -61,7 +63,11 @@ export function TruckModel({ poseRef }: { poseRef: RefObject<TruckPose> }) {
         if (!width || !height) return;
         const pose = poseRef.current ?? { pitch: 0, heading: 0, distance: 0 };
         const pitch = Math.min(1, Math.max(0, pose.pitch));
-        if (rig) rig.rotation.y = -pose.heading;
+        if (rig) {
+          targetEuler.set(0, -pose.heading, 0);
+          targetQuat.setFromEuler(targetEuler);
+          rig.quaternion.slerp(targetQuat, 0.1);
+        }
         const spin = pose.distance * 0.08;
         for (const tire of tires) tire.obj.rotation[tire.axis] = tire.base + spin;
         const lift = (1 - pitch) * groundFrac * 50;
