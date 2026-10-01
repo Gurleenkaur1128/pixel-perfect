@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 
 import logo from "@/assets/logo.png";
+import { AwButton } from "@/components/aw/ui";
 import { useScrollY } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { label: "Services", href: "#services" },
   { label: "Network", href: "#network" },
-  { label: "About", href: "#about" },
-  { label: "Careers", href: "#careers" },
+  { label: "Opportunities", href: "#careers" },
 ];
 
 export function Nav() {
@@ -70,24 +70,13 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-5 lg:flex">
-          <a
-            href="#track"
-            className={cn(
-              "whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors",
-              solid
-                ? "text-[#172033]/80 hover:text-[#2D419A]"
-                : "text-white drop-shadow-[0_1px_8px_rgba(16,28,72,0.45)] hover:text-white",
-            )}
-          >
+        <div className="hidden items-center gap-3 lg:flex">
+          <AwButton href="#track" arrow="↗" compact>
             Track Shipment
-          </a>
-          <a
-            href="#quote"
-            className="group inline-flex items-center gap-2 whitespace-nowrap rounded-sm bg-route px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-route/90"
-          >
-            Request a Quote <span className="arrow-slide group-hover:translate-x-1">&#8594;</span>
-          </a>
+          </AwButton>
+          <AwButton href="#quote" compact>
+            Request a Quote
+          </AwButton>
         </div>
 
         <button
@@ -119,13 +108,9 @@ export function Nav() {
               {l.label}
             </a>
           ))}
-          <a
-            href="#quote"
-            onClick={() => setOpen(false)}
-            className="mt-5 inline-flex items-center justify-between rounded-sm bg-route px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
-          >
-            Request a Quote <span>&#8594;</span>
-          </a>
+          <AwButton href="#quote" className="mt-5" onClick={() => setOpen(false)}>
+            Request a Quote
+          </AwButton>
         </nav>
       </div>
     </header>

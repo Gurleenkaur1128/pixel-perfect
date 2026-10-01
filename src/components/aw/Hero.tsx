@@ -160,7 +160,7 @@ export function Hero() {
 
         <div className={cn("mt-7 flex flex-wrap gap-3", fade(5))}>
           <AwButton href="#quote">Request a Quote</AwButton>
-          <AwButton href="#track" tone="ghost-light" arrow="↗">
+          <AwButton href="#track" arrow="↗">
             Track Shipment
           </AwButton>
         </div>

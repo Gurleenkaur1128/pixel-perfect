@@ -1,18 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { BlanketWrap } from "@/components/aw/BlanketWrap";
 import { Careers } from "@/components/aw/Careers";
-import { Excellence } from "@/components/aw/Excellence";
-import { FinalCta } from "@/components/aw/FinalCta";
 import { Footer } from "@/components/aw/Footer";
 import { Hero } from "@/components/aw/Hero";
 import { Journey } from "@/components/aw/Journey";
 import { Nav } from "@/components/aw/Nav";
 import { NetworkMap } from "@/components/aw/NetworkMap";
 import { Preloader } from "@/components/aw/Preloader";
-import { ServiceModes } from "@/components/aw/ServiceModes";
-import { Stats } from "@/components/aw/Stats";
-import { WestWay } from "@/components/aw/WestWay";
 
 const TITLE = "American West — Nationwide Furniture Logistics";
 const DESC =
@@ -38,15 +32,9 @@ function Index() {
       <Preloader />
       <Nav />
       <Hero />
-      <WestWay />
-      <BlanketWrap />
       <Journey />
       <NetworkMap />
-      <Excellence />
-      <Stats />
-      <ServiceModes />
       <Careers />
-      <FinalCta />
       <Footer />
     </main>
   );
