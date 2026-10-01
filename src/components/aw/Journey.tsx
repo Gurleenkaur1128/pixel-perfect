@@ -121,6 +121,7 @@ type Geo = {
   showBase: boolean;
   roadStartX: number;
   viewW: number;
+  curveY: number;
 };
 
 type Anim = {
@@ -133,6 +134,7 @@ type Anim = {
   booted: boolean;
   mode: Mode | "";
   active: boolean;
+  revealed: number;
 };
 
 type Pt = { x: number; y: number };
@@ -301,14 +303,17 @@ function StopCopy({
   text,
   icon: Icon,
   tone = "ink",
+  scale = "service",
 }: {
   index: string;
   title: string;
   text: string;
   icon: typeof Truck;
   tone?: "ink" | "light";
+  scale?: "service" | "mile";
 }) {
   const light = tone === "light";
+  const mile = scale === "mile";
   return (
     <>
       <div className="flex items-center gap-2">
@@ -317,15 +322,19 @@ function StopCopy({
           strokeWidth={1.6}
           aria-hidden="true"
         />
-        <span className="eyebrow text-route">{index}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-route">{index}</span>
       </div>
       <h3
-        className={`display mt-2 text-[15px] leading-tight tracking-wide text-balance ${light ? "text-current" : "text-[#142660]"}`}
+        className={`display mt-2 leading-[1.05] tracking-wide text-balance ${
+          mile ? "text-[20px]" : "text-[17px]"
+        } ${light ? "text-current" : "text-[#142660]"}`}
       >
         {title}
       </h3>
       <p
-        className={`mt-1.5 text-[12.5px] leading-snug ${light ? "text-current opacity-70" : "text-[#172033]/70"}`}
+        className={`mt-2 leading-relaxed ${
+          mile ? "text-[15px]" : "text-[14px]"
+        } ${light ? "text-current opacity-75" : "text-[#172033]/75"}`}
       >
         {text}
       </p>
@@ -365,6 +374,7 @@ export function Journey() {
     booted: false,
     mode: "",
     active: false,
+    revealed: 0,
   });
 
   useLayoutEffect(() => {
@@ -411,6 +421,7 @@ export function Journey() {
         { j: 1, u: 1 },
       ];
       let roadStartHint = { x: 0, y: 0 };
+      let curveY = 0;
 
       if (mode === "mobile") {
         showBase = false;
@@ -461,7 +472,7 @@ export function Journey() {
       } else {
         const navClear = 78;
         baseH =
-          mode === "desktop" ? clamp(h * 0.34, 280, 340) : clamp(h * 0.32, 220, 286);
+          mode === "desktop" ? clamp(h * 0.44, 340, 460) : clamp(h * 0.52, 400, 540);
         const maxBase = h - navClear - truckH - 28;
         baseH = clamp(Math.min(baseH, maxBase), 180, baseH);
         truckW = Math.min(truckW, (h - baseH - navClear - 16) / SIDE_RATIO, w * 0.52);
@@ -471,7 +482,7 @@ export function Journey() {
 
         let ry = clamp(Math.min(w, h) * 0.2, 150, 230);
         let rx = ry * 1.38;
-        const vertX = w - roadW / 2 - 36;
+        const vertX = Math.min(w - roadW / 2 - 28, w - truckW * 0.5 - 24);
         let xA = vertX - rx;
         const minHoriz = Math.max(w * 0.48, truckW * 1.15);
         if (xA < minHoriz) {
@@ -486,7 +497,8 @@ export function Journey() {
         const c1 = ellipseCubic(xA, cy, rx, ry, phi0, phiMid);
         const c2 = ellipseCubic(xA, cy, rx, ry, phiMid, phi1);
         const yCurveEnd = c2.p3.y;
-        const stepGap = h < 760 ? 168 : 204;
+        curveY = c2.p3.y;
+        const stepGap = h < 760 ? 188 : 236;
         const yFirstStep = yCurveEnd + 270;
         const yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
         const yStop = yLastStep + truckW * 0.15;
@@ -511,16 +523,21 @@ export function Journey() {
         preferY = h * 0.5;
         scroll = Math.round(clamp(h * (mode === "tablet" ? 5.1 : 5.6), 4600, 6400));
 
-        const travelLeft = Math.max(28, truckW * 0.2);
-        const travelRight = Math.max(travelLeft + 240, xA - 24);
-        const usable = travelRight - travelLeft;
-        const cardW = Math.min(200, usable / SERVICES.length - 18);
+        const padX = clamp(w * 0.05, 64, 90);
+        const gapX = clamp(w * 0.046, 56, 72);
+        const gapY = h < 820 ? 34 : 42;
+        const gridW = w - padX * 2;
+        const cardW = (gridW - gapX * 2) / 3;
+        const gridLeft = (w - gridW) / 2;
+        const gridTop = yEdge + (h < 760 ? 22 : 36);
+        const rowH = h < 820 ? 118 : 148;
         for (let i = 0; i < SERVICES.length; i++) {
-          const cx = travelLeft + (usable * (i + 0.5)) / SERVICES.length;
+          const col = i % 3;
+          const row = Math.floor(i / 3);
           services.push({
-            x: cx - cardW / 2,
-            y: yEdge + (h < 760 ? 22 : 36),
-            t: 0,
+            x: gridLeft + col * (cardW + gapX),
+            y: gridTop + row * (rowH + gapY),
+            t: 0.12 + i * 0.055,
             w: cardW,
             side: "",
             enter: "y",
@@ -538,7 +555,7 @@ export function Journey() {
           watermarkRef.current.style.fontSize = `${clamp(w * 0.15, 96, 220)}px`;
         }
 
-        const stepW = clamp(mode === "desktop" ? 220 : 176, 150, Math.max(150, w * 0.22));
+        const stepW = clamp(mode === "desktop" ? 252 : 210, 200, 280);
         const rightX = vertX + roadW / 2 + 44;
         const leftX = vertX - roadW / 2 - 44 - stepW;
         for (let i = 0; i < STEPS.length; i++) {
@@ -555,10 +572,10 @@ export function Journey() {
           });
         }
         delivered = {
-          x: vertX - 90,
-          y: yStop + truckW * 0.5,
-          t: 0.97,
-          w: 180,
+          x: vertX + roadW / 2 + 48,
+          y: yStop,
+          t: 0.9,
+          w: 210,
           side: "",
           enter: "y",
         };
@@ -596,7 +613,7 @@ export function Journey() {
         }
         if (uTurn < 0) uTurn = Math.min(0.9, uFlat + 0.04);
         if (uVert < 0) uVert = Math.min(0.96, uTurn + 0.04);
-        const uStop = arcAt(samples, w / 2 - shiftX, delivered.y - truckW * 0.5);
+        const uStop = arcAt(samples, w / 2 - shiftX, delivered.y - Math.min(56, truckW * 0.14));
         markers = [
           { j: 0, u: 0 },
           { j: 0.08, u: 0 },
@@ -622,9 +639,13 @@ export function Journey() {
       services.forEach((pos) => place(pos, "service"));
       steps.forEach((pos) => place(pos, "step"));
       services.forEach((pos, i) => {
+        if (mode !== "mobile") {
+          pos.t = 0.1 + i * 0.042;
+          return;
+        }
         const earlier = services[i - 1];
-        const prev = earlier ? earlier.t + 0.025 : 0.1;
-        pos.t = clamp(Math.max(pos.t, prev), 0.09, mode === "mobile" ? 0.55 : 0.53);
+        const prev = earlier ? earlier.t + 0.04 : 0.1;
+        pos.t = clamp(Math.max(pos.t, prev), 0.09, 0.55);
       });
       steps.forEach((pos, i) => {
         const earlier = steps[i - 1];
@@ -633,7 +654,8 @@ export function Journey() {
         pos.t = clamp(Math.max(pos.t, prev), floor, 0.96);
       });
       const lastStep = steps[steps.length - 1];
-      delivered.t = clamp(Math.max(delivered.t, (lastStep?.t ?? 0.9) + 0.02), 0.9, 0.99);
+      delivered.t = clamp((lastStep?.t ?? 0.9) + 0.02, 0.9, 0.96);
+      if (mode !== "mobile") delivered.t = 0.9;
 
       if (laneLRef.current) laneLRef.current.setAttribute("d", offsetPath(road, roadW * 0.3));
       if (laneRRef.current) laneRRef.current.setAttribute("d", offsetPath(road, -roadW * 0.3));
@@ -682,6 +704,7 @@ export function Journey() {
         showBase,
         roadStartX: roadStartHint.x,
         viewW: w,
+        curveY,
       };
       geoRef.current = geo;
 
@@ -723,6 +746,7 @@ export function Journey() {
         anim.booted = false;
         anim.viewX = 0;
         anim.viewY = 0;
+        anim.revealed = 0;
         for (const el of stops) el.dataset["state"] = "off";
       }
     };
@@ -752,6 +776,7 @@ export function Journey() {
         onLeaveBack: () => {
           animRef.current.target = 0;
           animRef.current.active = false;
+          animRef.current.revealed = 0;
         },
       });
     }, root);
@@ -770,26 +795,26 @@ export function Journey() {
       el.dataset["state"] = key;
       const side = el.dataset["side"];
       const enter = el.dataset["enter"];
-      const x = side === "left" ? -40 : side === "right" ? 40 : 0;
-      const y = enter === "y" ? 26 : 0;
-      const past = kind === "service" ? 0.6 : 1;
+      const x = side === "left" ? -55 : side === "right" ? 55 : 0;
+      const y = enter === "y" ? 28 : 0;
+      const duration = kind === "delivered" ? 0.8 : kind === "step" ? 1 : 0.95;
       if (key === "off") {
         play(el, {
           opacity: 0,
           x,
           y,
-          scale: enter === "y" ? 0.97 : 1,
-          duration: 0.4,
+          scale: 0.96,
+          duration: 0.45,
           ease: "power2.inOut",
           overwrite: "auto",
         });
       } else {
         play(el, {
-          opacity: key === "on" ? 1 : past,
+          opacity: 1,
           x: 0,
           y: 0,
           scale: 1,
-          duration: kind === "step" ? 0.75 : 0.65,
+          duration,
           ease: "power3.out",
           overwrite: "auto",
         });
@@ -820,15 +845,23 @@ export function Journey() {
         anim.viewY = 0;
         anim.booted = true;
       } else {
-        anim.angle = lerpAngle(anim.angle, pt.a, 0.34);
+        anim.angle = lerpAngle(anim.angle, pt.a, 0.5);
       }
 
       const pan = geo.mode === "mobile" ? 0 : smoothstep(0.62, 0.78, journey);
       const follow =
         geo.mode === "mobile" ? smoothstep(0.02, 0.12, journey) : smoothstep(0.44, 0.6, journey);
       const targetVX = geo.shiftX * pan;
-      const locked = geo.preferY - (drawY + bob);
-      const targetVY = locked < 0 ? locked * follow : 0;
+      const pinH = pin.clientHeight || window.innerHeight;
+      const sink = geo.mode === "mobile" ? 0 : smoothstep(0.94, 1, journey);
+      const aim = geo.preferY + (pinH * 0.56 - geo.preferY) * sink;
+      const locked = aim - (drawY + bob);
+      let targetVY = locked < 0 ? locked * follow : 0;
+      if (geo.mode !== "mobile" && geo.curveY > 0) {
+        const keepBend = 96 - geo.yEdge;
+        const release = smoothstep(0.8, 0.93, journey);
+        if (targetVY < keepBend) targetVY = keepBend + (targetVY - keepBend) * release;
+      }
       anim.viewX += (targetVX - anim.viewX) * 0.14;
       anim.viewY += (targetVY - anim.viewY) * 0.16;
       scene.style.transform = `translate3d(${anim.viewX}px, ${anim.viewY}px, 0)`;
@@ -851,8 +884,10 @@ export function Journey() {
       const nose = geo.truckW * (geo.mode === "mobile" ? 0.34 : 0.52);
       const gate = geo.mode === "mobile" ? 1 : smoothstep(0.52, 0.56, journey);
       const drawn = clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate;
+      anim.revealed = Math.max(anim.revealed, drawn);
+      if (anim.revealed > geo.roadTotal) anim.revealed = geo.roadTotal;
       mask.style.strokeDasharray = `${geo.roadTotal}`;
-      mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - drawn)}`;
+      mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
       const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.48, 0.57, journey);
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * laneFade);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * laneFade);
@@ -892,10 +927,20 @@ export function Journey() {
       reveal("service");
       reveal("step");
       const deliveredEl = pin.querySelector<HTMLElement>("[data-kind='delivered']");
-      if (deliveredEl) syncStop(deliveredEl, journey, journey >= Number(deliveredEl.dataset["t"] ?? 1), "delivered");
+      if (deliveredEl) {
+        if (geo.mode !== "mobile") {
+          const pinH = pin.clientHeight || window.innerHeight;
+          const pinW = pin.clientWidth || window.innerWidth;
+          const x = Math.min(pt.x + anim.viewX + geo.roadW * 0.5 + 28, pinW - 230);
+          const y = Math.min(drawY + anim.viewY + 16, pinH * 0.58);
+          deliveredEl.style.left = `${x}px`;
+          deliveredEl.style.top = `${y}px`;
+        }
+        syncStop(deliveredEl, journey, journey >= Number(deliveredEl.dataset["t"] ?? 1), "delivered");
+      }
 
       if (servicesLayerRef.current) {
-        const leave = geo.mode === "mobile" ? smoothstep(0.42, 0.55, journey) : smoothstep(0.42, 0.54, journey);
+        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, journey) : smoothstep(0.46, 0.58, journey);
         servicesLayerRef.current.style.opacity = geo.mode === "mobile" ? "1" : String(1 - leave);
       }
 
@@ -946,7 +991,7 @@ export function Journey() {
       className="relative bg-white text-[#172033]"
       aria-labelledby="services-heading"
     >
-      <div ref={pinRef} className="aw-journey aw-journey-pin relative h-[100svh] overflow-hidden bg-white">
+      <div ref={pinRef} className="aw-journey aw-journey-pin relative z-[2] h-[100svh] overflow-hidden bg-white">
         <div ref={probeRef} className="aw-truck-probe" aria-hidden="true" />
 
         <p
@@ -1036,6 +1081,7 @@ export function Journey() {
                   text={service.text}
                   icon={service.icon}
                   tone="light"
+                  scale="service"
                 />
               </article>
             ))}
@@ -1062,21 +1108,9 @@ export function Journey() {
               data-state="off"
               className="absolute z-[5] opacity-0"
             >
-              <StopCopy index={`0${i + 1}`} title={step.title} text={step.text} icon={step.icon} />
+              <StopCopy index={`0${i + 1}`} title={step.title} text={step.text} icon={step.icon} scale="mile" />
             </article>
           ))}
-
-          <div
-            data-stop=""
-            data-kind="delivered"
-            data-state="off"
-            className="absolute z-[6] text-center opacity-0"
-          >
-            <span className="relative mx-auto block h-3 w-3 rounded-full bg-route">
-              <span className="absolute inset-0 animate-[hub-pulse_2.6s_ease-out_infinite] rounded-full bg-route" />
-            </span>
-            <p className="display mt-3 text-[clamp(22px,2vw,32px)] text-route">Delivered.</p>
-          </div>
 
           <div
             ref={shadowRef}
@@ -1090,6 +1124,18 @@ export function Journey() {
           >
             <TruckModel poseRef={poseRef} />
           </div>
+        </div>
+
+        <div
+          data-stop=""
+          data-kind="delivered"
+          data-state="off"
+          className="absolute z-30 w-[210px] text-center opacity-0"
+        >
+          <span className="relative mx-auto block h-3 w-3 rounded-full bg-route">
+            <span className="absolute inset-0 animate-[hub-pulse_2.6s_ease-out_infinite] rounded-full bg-route" />
+          </span>
+          <p className="display mt-3 text-[clamp(22px,2vw,32px)] text-route">Delivered.</p>
         </div>
 
         <span

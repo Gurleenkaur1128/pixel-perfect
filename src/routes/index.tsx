@@ -9,6 +9,7 @@ import { Hero } from "@/components/aw/Hero";
 import { Journey } from "@/components/aw/Journey";
 import { Nav } from "@/components/aw/Nav";
 import { NetworkMap } from "@/components/aw/NetworkMap";
+import { Preloader } from "@/components/aw/Preloader";
 import { ServiceModes } from "@/components/aw/ServiceModes";
 import { Stats } from "@/components/aw/Stats";
 import { WestWay } from "@/components/aw/WestWay";
@@ -34,12 +35,13 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <main className="bg-background text-foreground">
+      <Preloader />
       <Nav />
       <Hero />
       <WestWay />
       <BlanketWrap />
-      <NetworkMap />
       <Journey />
+      <NetworkMap />
       <Excellence />
       <Stats />
       <ServiceModes />

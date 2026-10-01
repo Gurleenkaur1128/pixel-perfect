@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import logo from "@/assets/logo.png";
 import { useScrollY } from "@/hooks/use-reveal";
@@ -14,16 +14,35 @@ const LINKS = [
 export function Nav() {
   const y = useScrollY();
   const [open, setOpen] = useState(false);
+  const [heroHeight, setHeroHeight] = useState(800);
+
+  useEffect(() => {
+    const measure = () => setHeroHeight(window.innerHeight);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const solid = open || y > heroHeight - 72;
 
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b border-[#142660]/10 bg-white/90 backdrop-blur-[14px] transition-shadow duration-500",
-        (y > 8 || open) && "shadow-[0_8px_28px_rgba(20,38,96,0.06)]",
+        "fixed inset-x-0 top-0 z-50 border-b transition-[background-color,box-shadow,border-color,backdrop-filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        solid
+          ? "border-[#142660]/10 bg-[rgba(255,255,255,0.92)] shadow-[0_8px_28px_rgba(20,38,96,0.06)] backdrop-blur-[14px]"
+          : "border-transparent bg-transparent shadow-none",
       )}
     >
       <div className="container-aw flex items-center justify-between gap-4 py-2">
-        <a href="#top" aria-label="American West home" className="shrink-0">
+        <a
+          href="#top"
+          aria-label="American West home"
+          className={cn(
+            "shrink-0 rounded-sm px-1.5 py-1 transition-[background-color,backdrop-filter] duration-700",
+            solid ? "bg-transparent" : "bg-[rgba(255,255,255,0.08)] backdrop-blur-[8px]",
+          )}
+        >
           <img
             src={logo}
             alt="American West Worldwide Express, Inc."
@@ -38,7 +57,12 @@ export function Nav() {
             <a
               key={l.label}
               href={l.href}
-              className="group relative whitespace-nowrap py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#172033]/80 transition-colors duration-500 hover:text-[#2D419A]"
+              className={cn(
+                "group relative whitespace-nowrap py-1 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-500",
+                solid
+                  ? "text-[#172033]/80 hover:text-[#2D419A]"
+                  : "text-white drop-shadow-[0_1px_8px_rgba(16,28,72,0.45)] hover:text-white",
+              )}
             >
               {l.label}
               <span className="absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-route transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100" />
@@ -49,7 +73,12 @@ export function Nav() {
         <div className="hidden items-center gap-5 lg:flex">
           <a
             href="#track"
-            className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-[#172033]/80 transition-colors hover:text-[#2D419A]"
+            className={cn(
+              "whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors",
+              solid
+                ? "text-[#172033]/80 hover:text-[#2D419A]"
+                : "text-white drop-shadow-[0_1px_8px_rgba(16,28,72,0.45)] hover:text-white",
+            )}
           >
             Track Shipment
           </a>
@@ -68,8 +97,8 @@ export function Nav() {
           onClick={() => setOpen((v) => !v)}
           className="flex h-10 w-10 flex-col items-end justify-center gap-[6px] lg:hidden"
         >
-          <span className={cn("h-0.5 w-7 bg-[#142660] transition-transform duration-500", open && "translate-y-[4px] rotate-45")} />
-          <span className={cn("h-0.5 w-5 bg-[#142660] transition-all duration-500", open && "w-7 -translate-y-[4px] -rotate-45")} />
+          <span className={cn("h-0.5 w-7 transition-transform duration-500", solid ? "bg-[#142660]" : "bg-white", open && "translate-y-[4px] rotate-45")} />
+          <span className={cn("h-0.5 w-5 transition-all duration-500", solid ? "bg-[#142660]" : "bg-white", open && "w-7 -translate-y-[4px] -rotate-45")} />
         </button>
       </div>
 
