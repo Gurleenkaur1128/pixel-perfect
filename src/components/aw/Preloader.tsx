@@ -6,7 +6,7 @@ export function Preloader() {
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const done = window.setTimeout(() => setGone(true), reduce ? 160 : 2480);
+    const done = window.setTimeout(() => setGone(true), reduce ? 160 : 5800);
     return () => window.clearTimeout(done);
   }, []);
 

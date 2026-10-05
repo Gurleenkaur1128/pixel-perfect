@@ -13,8 +13,8 @@ export function Hero() {
       setStage(5);
       return;
     }
-    // The veil stays up until the loader truck has left. Copy starts as that exit finishes.
-    const lead = 2000;
+    // The veil stays up through the loader pause and until the truck is leaving.
+    const lead = 4900;
     const timers = [150, 550, 900, 1250, 1650].map((ms, i) =>
       window.setTimeout(() => setStage(i + 1), lead + ms),
     );

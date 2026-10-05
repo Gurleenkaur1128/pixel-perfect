@@ -366,16 +366,16 @@
   position: absolute;
   inset: 0;
   background: #ffffff;
-  animation: aw-preloader-veil 2.4s linear forwards;
+  animation: aw-preloader-veil 5.6s linear forwards;
 }
 
 .aw-preloader-word {
   position: absolute;
   left: 50%;
-  top: 30%;
+  top: 50%;
   z-index: 2;
   margin: 0;
-  transform: translate(-50%, 0);
+  transform: translate(-50%, -50%);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(48px, 8vw, 108px);
@@ -384,21 +384,18 @@
   text-transform: uppercase;
   white-space: nowrap;
   color: #142660;
-  text-shadow:
-    0 0 18px rgba(45, 65, 154, 0.28),
-    0 0 36px rgba(45, 65, 154, 0.16);
-  animation: aw-preloader-word 2.4s linear forwards;
+  animation: aw-preloader-word 5.6s linear forwards;
 }
 
 .aw-preloader-truck {
   position: fixed;
-  top: 56%;
+  top: calc(50% + 96px);
   left: 0;
   z-index: 1;
   width: min(360px, 40vw);
   height: auto;
   aspect-ratio: 2000 / 667;
-  animation: aw-preloader-truck 2.4s linear forwards;
+  animation: aw-preloader-truck 5.6s linear forwards;
 }
 
 @keyframes aw-preloader-truck {
@@ -406,18 +403,15 @@
     transform: translate3d(-120%, 0, 0);
     animation-timing-function: cubic-bezier(0.22, 0.7, 0.28, 1);
   }
-  /* 0.8s — arrive below the title */
-  33.3% {
+  /* 0.9s — centered under the title */
+  16%,
+  /* 3.4s — hold about 2.5s while the title glows */
+  61% {
     transform: translate3d(calc(50vw - 50%), 0, 0);
-    animation-timing-function: linear;
+    animation-timing-function: cubic-bezier(0.4, 0.02, 0.18, 1);
   }
-  /* 1.2s — hold, still clear of the letters */
-  50% {
-    transform: translate3d(calc(50vw - 50%), 0, 0);
-    animation-timing-function: cubic-bezier(0.45, 0.02, 0.18, 1);
-  }
-  /* 2.0s — exit right before the hero is fully open */
-  83.3%,
+  /* 5.2s — slow exit to the right */
+  93%,
   100% {
     transform: translate3d(calc(100vw + 72px), 0, 0);
   }
@@ -426,32 +420,63 @@
 @keyframes aw-preloader-word {
   0% {
     opacity: 0;
-    filter: blur(10px);
+    filter: blur(8px);
+    text-shadow: 0 0 0 rgba(45, 65, 154, 0);
   }
-  12% {
+  8% {
     opacity: 1;
     filter: blur(0);
+    text-shadow: 0 0 0 rgba(45, 65, 154, 0);
   }
-  68% {
+  18%,
+  64% {
     opacity: 1;
     filter: blur(0);
+    text-shadow:
+      0 0 12px rgba(45, 65, 154, 0.65),
+      0 0 28px rgba(45, 65, 154, 0.5),
+      0 0 52px rgba(243, 105, 43, 0.32);
   }
-  86%,
+  86% {
+    opacity: 1;
+    filter: blur(0);
+    text-shadow:
+      0 0 10px rgba(45, 65, 154, 0.35),
+      0 0 22px rgba(45, 65, 154, 0.2);
+  }
   100% {
     opacity: 0;
     filter: blur(6px);
+    text-shadow: 0 0 0 rgba(45, 65, 154, 0);
   }
 }
 
 @keyframes aw-preloader-veil {
   0%,
-  75% {
+  84% {
     opacity: 1;
   }
-  96%,
+  97%,
   100% {
     opacity: 0;
   }
+}
+
+.aw-journey [data-kind="service"],
+.aw-journey [data-kind="step"] {
+  transition: filter 0.7s ease;
+}
+
+.aw-journey [data-kind="service"][data-glow="on"] {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.75)) drop-shadow(0 0 18px rgba(243, 105, 43, 0.7));
+}
+
+.aw-journey [data-kind="step"][data-glow="on"] {
+  filter: drop-shadow(0 0 10px rgba(243, 105, 43, 0.95)) drop-shadow(0 0 22px rgba(243, 105, 43, 0.55));
+}
+
+.aw-journey [data-kind="step"][data-glow="on"] h3 {
+  text-shadow: 0 0 16px rgba(243, 105, 43, 0.8);
 }
 
 .aw-request {
