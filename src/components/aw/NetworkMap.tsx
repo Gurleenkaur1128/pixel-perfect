@@ -36,11 +36,18 @@ function arc(a: string, b: string, lift = 0.22) {
 
 const ROUTES = [
   { d: arc("Los Angeles", "Dallas"), c: "var(--route)", dur: 7 },
-  { d: arc("Dallas", "Atlanta"), c: "var(--route)", dur: 6 },
-  { d: arc("Atlanta", "New York"), c: "var(--route)", dur: 6 },
+  { d: arc("Dallas", "Atlanta"), c: "var(--route)", dur: 6.4 },
+  { d: arc("Atlanta", "New York"), c: "var(--route)", dur: 6.2 },
   { d: arc("Los Angeles", "Chicago", 0.18), c: "rgba(255,255,255,0.45)", dur: 10 },
-  { d: arc("Chicago", "New York"), c: "rgba(255,255,255,0.45)", dur: 6 },
-  { d: arc("Dallas", "Chicago", 0.2), c: "rgba(255,255,255,0.45)", dur: 7 },
+  { d: arc("Chicago", "New York"), c: "rgba(255,255,255,0.45)", dur: 6.6 },
+  { d: arc("Dallas", "Chicago", 0.2), c: "rgba(255,255,255,0.45)", dur: 7.4 },
+];
+
+const REQUESTS = [
+  { label: "New Request", city: "Los Angeles", dx: 108, dy: -28, delay: "0s" },
+  { label: "Pickup Request", city: "Dallas", dx: 10, dy: 30, delay: "2.3s" },
+  { label: "Quote Request", city: "Chicago", dx: -40, dy: 24, delay: "4.6s" },
+  { label: "Delivery Request", city: "New York", dx: -70, dy: -8, delay: "6.4s" },
 ];
 
 const STATS = [
@@ -99,6 +106,7 @@ export function NetworkMap() {
             inView ? "scale-100" : "scale-[1.03]",
           )}
         >
+          <div className="relative">
           <svg viewBox="0 0 975 610" className="mx-auto h-auto w-full max-h-[min(52vh,460px)]" role="img" aria-label="Map of the continental United States with American West delivery routes">
             <defs>
               <filter id="aw-route-glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -110,6 +118,7 @@ export function NetworkMap() {
 
             {ROUTES.map((r, i) => {
               const active = i < 3;
+              const offsets = r.dur >= 7 ? [0, r.dur / 2] : [0];
               return (
               <g key={i}>
                 {active && (
@@ -144,7 +153,10 @@ export function NetworkMap() {
                     transition: `stroke-dashoffset 1800ms cubic-bezier(0.16,1,0.3,1) ${500 + i * 200}ms`,
                   }}
                 />
-                {inView && active && <MapTruck href={`#nr-${i}`} dur={r.dur} begin={-i * 2.2} />}
+                {inView &&
+                  offsets.map((offset) => (
+                    <MapTruck key={offset} href={`#nr-${i}`} dur={r.dur} begin={-(i * 1.15 + offset)} />
+                  ))}
               </g>
             );})}
 
@@ -170,6 +182,30 @@ export function NetworkMap() {
               </g>
             ))}
           </svg>
+          {inView && (
+            <div className="pointer-events-none absolute inset-0">
+              {REQUESTS.map((request) => {
+                const city = at(request.city);
+                return (
+                  <div
+                    key={`${request.city}-${request.delay}`}
+                    className="aw-request absolute"
+                    style={{
+                      left: `${((city.x + request.dx) / 975) * 100}%`,
+                      top: `${((city.y + request.dy) / 610) * 100}%`,
+                      animationDelay: request.delay,
+                    }}
+                  >
+                    <span className="aw-request-card">
+                      <span className="aw-request-dot" />
+                      {request.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          </div>
           <p className="mt-2 text-center text-[0.6875rem] uppercase tracking-[0.2em] text-on-navy/40">
             Representative coverage routes
           </p>
