@@ -381,6 +381,7 @@ export function Journey() {
   const shadowRef = useRef<HTMLDivElement>(null);
   const poseRef = useRef<TruckPose>({ pitch: 0, heading: 0, distance: 0 });
   const servicesLayerRef = useRef<HTMLDivElement>(null);
+  const serviceLeadRef = useRef<HTMLDivElement>(null);
   const watermarkRef = useRef<HTMLHeadingElement>(null);
   const eyebrowRef = useRef<HTMLParagraphElement>(null);
   const journeyHeadRef = useRef<HTMLDivElement>(null);
@@ -507,9 +508,10 @@ export function Journey() {
           { j: 0, u: 0 },
           { j: 1, u: 1 },
         ];
+        if (serviceLeadRef.current) serviceLeadRef.current.style.display = "none";
       } else {
         const navClear = 78;
-        const band = clamp(h * 0.3, mode === "desktop" ? 250 : 230, mode === "desktop" ? 290 : 270);
+        const band = clamp(h * 0.42, mode === "desktop" ? 340 : 300, mode === "desktop" ? 420 : 360);
         baseH = band;
         const maxBase = h - navClear - truckH - 36;
         baseH = clamp(Math.min(baseH, maxBase), 220, baseH);
@@ -522,8 +524,8 @@ export function Journey() {
 
         // Fixed path: straight, a wide curve, then a smaller curve into the vertical road.
         const sweep1 = (52 * Math.PI) / 180;
-        const r1 = clamp(h * 0.7, 560, 820);
-        const r2 = clamp(h * 0.5, 400, 560);
+        const r1 = clamp(h * 0.92, 720, 1040);
+        const r2 = clamp(h * 0.62, 480, 720);
         const xStart = clamp(truckW * 0.2, 64, 140);
         const P0x = clamp(w * 0.7, xStart + w * 0.42, w * 0.78);
         const phiA = -Math.PI / 2;
@@ -588,19 +590,35 @@ export function Journey() {
         preferY = h * 0.46;
         scroll = Math.round(clamp(h * (mode === "tablet" ? 8.4 : 9.4), 7400, 10400));
 
-        const cardW = clamp(w * 0.3, 280, 420);
-        const cardX = clamp((w - cardW) * 0.56, 96, w - cardW - 48);
-        const cardY = yEdge + clamp((baseH - 168) / 2, 36, 96);
+        const cardW = clamp(w * 0.2, 220, 280);
+        const gap = clamp(w * 0.028, 28, 48);
+        const leadW = clamp(w * 0.26, 240, 360);
+        const cardY = yEdge + clamp((baseH - 196) / 2, 36, 120);
+        let cursor = Math.round(w * 0.36);
+        if (serviceLeadRef.current) {
+          const lead = serviceLeadRef.current;
+          lead.style.left = `${cursor}px`;
+          lead.style.top = `${cardY + 28}px`;
+          lead.style.width = `${leadW}px`;
+          lead.dataset["home"] = String(cursor);
+          lead.style.display = "";
+        }
+        cursor += leadW + Math.round(gap * 1.6);
         for (let i = 0; i < SERVICES.length; i++) {
           const zone = SERVICE_ZONES[i] ?? 0.7;
           services.push({
-            x: cardX,
+            x: cursor,
             y: cardY,
             t: zone * HORIZ_END,
             w: cardW,
             side: "",
-            enter: "y",
+            enter: "x",
           });
+          cursor += cardW + gap;
+        }
+        const last = services[services.length - 1];
+        if (servicesLayerRef.current && last) {
+          servicesLayerRef.current.dataset["shiftEnd"] = String(Math.round(w * 0.46 - last.x));
         }
 
         const stepW = clamp(mode === "desktop" ? 210 : 200, 176, 230);
@@ -615,13 +633,10 @@ export function Journey() {
           const wm = watermarkRef.current;
           wm.style.left = "50%";
           wm.style.transform = "translate(-50%, 0)";
-          let wmSize = clamp(w * 0.1, 72, 150);
+          const wmSize = clamp(w * 0.2, 140, 320);
           wm.style.fontSize = `${wmSize}px`;
-          const natural = wm.scrollWidth || w;
-          if (natural > w - 48) wmSize = Math.max(72, (wmSize * (w - 48)) / natural);
-          wm.style.fontSize = `${wmSize}px`;
-          wm.style.top = `${Math.max(96, yEdge - wmSize * 0.78)}px`;
-          wm.style.opacity = "0.12";
+          wm.style.top = `${Math.max(72, yEdge - wmSize * 0.62)}px`;
+          wm.style.opacity = "1";
         }
 
         const gutter = 48;
@@ -810,6 +825,12 @@ export function Journey() {
         el.dataset["side"] = pos.side;
         el.dataset["enter"] = pos.enter;
         el.dataset["t"] = pos.t.toFixed(4);
+        if (mode !== "mobile" && el.dataset["kind"] === "service") {
+          gsap.killTweensOf(el);
+          gsap.set(el, { opacity: 1, x: 0, y: 0, scale: 1 });
+          el.dataset["state"] = "on";
+          return;
+        }
         if (el.dataset["state"] === "off" || !el.dataset["state"]) {
           const service = el.dataset["kind"] === "service";
           gsap.set(el, {
@@ -1062,43 +1083,16 @@ export function Journey() {
       if (geo.mode === "mobile") {
         serviceList.forEach((el, i) => syncStop(el, revealJ, i === activeService, "service"));
       } else {
-        serviceList.forEach((el, i) => {
-          const role =
-            i > activeService
-              ? "off"
-              : i === activeService
-                ? "active"
-                : i === activeService - 1
-                  ? "prev"
-                  : "older";
-          if (el.dataset["state"] === role) return;
-          el.dataset["state"] = role;
-          el.style.zIndex = role === "active" ? "3" : role === "prev" ? "1" : "0";
-          const shift = -Math.round((el.offsetWidth || 320) * 0.92);
-          if (role === "active") {
-            play(el, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.92, ease: "power3.out", overwrite: "auto" });
-          } else if (role === "prev") {
-            play(el, {
-              opacity: 0.28,
-              x: shift,
-              y: 12,
-              scale: 0.78,
-              duration: 0.7,
-              ease: "power2.out",
-              overwrite: "auto",
-            });
-          } else {
-            play(el, {
-              opacity: 0,
-              x: role === "older" ? shift : 0,
-              y: 24,
-              scale: 0.97,
-              duration: role === "older" ? 0.45 : 0.4,
-              ease: "power2.inOut",
-              overwrite: "auto",
-            });
-          }
-        });
+        const shiftEnd = Number(servicesLayerRef.current?.dataset["shiftEnd"] ?? 0);
+        const shift = shiftEnd * clamp(revealJ / 0.42, 0, 1);
+        const slide = (el: HTMLElement) => {
+          gsap.killTweensOf(el);
+          el.dataset["state"] = "on";
+          el.style.opacity = "1";
+          el.style.transform = `translate3d(${shift}px, 0, 0)`;
+        };
+        serviceList.forEach(slide);
+        if (serviceLeadRef.current) slide(serviceLeadRef.current);
       }
       revealSteps();
       if (exitMaskRef.current) exitMaskRef.current.style.opacity = "0";
@@ -1122,7 +1116,7 @@ export function Journey() {
       const wmFade =
         geo.mode === "mobile"
           ? 1 - smoothstep(0.05, 0.2, revealJ)
-          : 0.12 * (1 - smoothstep(0.48, 0.58, revealJ));
+          : 1 - smoothstep(0.4, 0.5, revealJ);
       if (watermarkRef.current) {
         watermarkRef.current.style.opacity = String(wmFade);
         watermarkRef.current.style.transform = "translate(-50%, 0)";
@@ -1183,7 +1177,7 @@ export function Journey() {
         <h2
           id="services-heading"
           ref={watermarkRef}
-          className="display pointer-events-none absolute left-[3%] z-0 whitespace-nowrap text-[#142660]"
+          className="display pointer-events-none absolute left-[3%] z-0 whitespace-nowrap text-[#c5cbd4]"
         >
           Our Services
         </h2>
@@ -1269,13 +1263,21 @@ export function Journey() {
           </svg>
 
           <div ref={servicesLayerRef} className="absolute inset-0 z-[4]">
+            <div
+              ref={serviceLeadRef}
+              data-kind="service-lead"
+              className="absolute max-w-[34ch] text-[15px] leading-relaxed text-white/80"
+            >
+              <p>Specialized furniture transportation, from the vendor floor through the last mile.</p>
+              <p className="mt-4 text-white/70">One partner for storage, linehaul, and delivery.</p>
+            </div>
             {SERVICES.map((service, i) => (
               <article
                 key={service.title}
                 data-stop=""
                 data-kind="service"
                 data-state="off"
-                className="absolute origin-left text-white opacity-0 [&_h3]:!mt-3 [&_h3]:!text-[clamp(28px,2.6vw,40px)] [&_h3]:!leading-[1.02] [&_p]:!mt-3 [&_p]:!max-w-[34ch] [&_p]:!text-[15px] [&_p]:!leading-relaxed [&_svg]:!h-5 [&_svg]:!w-5"
+                className="absolute text-white [&_h3]:!mt-3 [&_h3]:!text-[clamp(18px,1.35vw,22px)] [&_h3]:!uppercase [&_h3]:!leading-tight [&_h3]:!tracking-[0.03em] [&_p]:!mt-2 [&_p]:!text-[13px] [&_p]:!leading-snug [&_p]:!text-white/75 [&_span]:!hidden [&>div]:!flex-col [&>div]:!items-start [&>div]:!gap-3 [&_svg]:!h-6 [&_svg]:!w-6"
               >
                 <StopCopy
                   index={`0${i + 1}`}
