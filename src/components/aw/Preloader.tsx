@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-/** Cinematic beat: the truck enters, holds on the title, then drives into the hero. */
+/** Full-screen beat: title first, truck below it, then the truck exits into the hero. */
 export function Preloader() {
   const [gone, setGone] = useState(false);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const done = window.setTimeout(() => setGone(true), reduce ? 160 : 2350);
+    const done = window.setTimeout(() => setGone(true), reduce ? 160 : 2480);
     return () => window.clearTimeout(done);
   }, []);
 
