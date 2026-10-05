@@ -986,8 +986,8 @@ export function Journey() {
           const locked = geo.preferY - (drawY + bob);
           targetVY = locked < 0 ? locked * follow : 0;
         } else {
-          const follow = smoothstep(HORIZ_END, 0.84, journey);
-          const followY = pinH * 0.56 - (drawY + bob);
+          const follow = smoothstep(0.48, 0.66, journey);
+          const followY = pinH * 0.62 - (drawY + bob);
           targetVY = Math.min(0, followY) * follow;
         }
       }
@@ -996,7 +996,7 @@ export function Journey() {
       scene.style.transform = `translate3d(${anim.viewX}px, ${anim.viewY}px, 0)`;
 
       if (truckRef.current) {
-        const ride = (1 - pitch) * (geo.roadW / 2 + geo.truckW * SIDE_RATIO * 0.46);
+        const ride = (1 - pitch) * (geo.roadW / 2);
         truckRef.current.style.transform = `translate3d(${pt.x}px, ${drawY + bob - ride}px, 0)`;
         truckRef.current.style.opacity = "1";
       }
