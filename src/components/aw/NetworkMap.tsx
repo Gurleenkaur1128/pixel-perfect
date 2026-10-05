@@ -43,12 +43,29 @@ const ROUTES = [
   { d: arc("Dallas", "Chicago", 0.2), c: "rgba(255,255,255,0.45)", dur: 7.4 },
 ];
 
+const REQUEST_CYCLE = 11;
 const REQUESTS = [
-  { label: "New Request", city: "Los Angeles", dx: 108, dy: -28, delay: "0s" },
-  { label: "Pickup Request", city: "Dallas", dx: 10, dy: 30, delay: "2.3s" },
-  { label: "Quote Request", city: "Chicago", dx: -40, dy: 24, delay: "4.6s" },
-  { label: "Delivery Request", city: "New York", dx: -70, dy: -8, delay: "6.4s" },
-];
+  { label: "New request", coord: [-122.33, 47.61] as [number, number], dx: 18, dy: -22 },
+  { label: "Pickup", coord: [-121.9, 37.48] as [number, number], dx: 16, dy: 18 },
+  { label: "Quote", coord: [-112.07, 33.45] as [number, number], dx: 14, dy: -20 },
+  { label: "Delivery", coord: [-104.99, 39.74] as [number, number], dx: -16, dy: 20 },
+  { label: "New request", coord: [-95.37, 29.76] as [number, number], dx: 16, dy: 16 },
+  { label: "Pickup", coord: [-93.27, 44.98] as [number, number], dx: -14, dy: -18 },
+  { label: "Route", coord: [-90.2, 38.63] as [number, number], dx: 14, dy: 16 },
+  { label: "Quote", coord: [-80.19, 25.76] as [number, number], dx: -14, dy: -16 },
+  { label: "Delivery", coord: [-71.06, 42.36] as [number, number], dx: -18, dy: 14 },
+].flatMap((request, i) => {
+  const projected = projection(request.coord);
+  if (!projected) return [];
+  return [
+    {
+      label: request.label,
+      x: projected[0] + request.dx,
+      y: projected[1] + request.dy,
+      delay: `${-((i * REQUEST_CYCLE) / 9)}s`,
+    },
+  ];
+});
 
 const STATS = [
   { v: "48", l: "Contiguous states" },
@@ -83,8 +100,8 @@ export function NetworkMap() {
       <div
         ref={ref}
         className={cn(
-          "container-aw transition-[transform,opacity] duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
-          inView ? "translate-y-0 opacity-100" : "translate-y-[80px] opacity-0",
+          "container-aw transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          inView ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
         )}
       >
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
@@ -184,32 +201,29 @@ export function NetworkMap() {
           </svg>
           {inView && (
             <div className="pointer-events-none absolute inset-0">
-              {REQUESTS.map((request) => {
-                const city = at(request.city);
-                return (
+              {REQUESTS.map((request) => (
                   <div
-                    key={`${request.city}-${request.delay}`}
+                    key={`${request.label}-${request.x}-${request.y}`}
                     className="aw-request absolute"
                     style={{
-                      left: `${((city.x + request.dx) / 975) * 100}%`,
-                      top: `${((city.y + request.dy) / 610) * 100}%`,
+                      left: `${(request.x / 975) * 100}%`,
+                      top: `${(request.y / 610) * 100}%`,
                       animationDelay: request.delay,
                     }}
                   >
                     <span className="aw-pin-pop">
                       <span className="aw-request-card">{request.label}</span>
                       <svg className="aw-pin" viewBox="0 0 48 68" aria-hidden="true">
-                        <ellipse cx="24" cy="62" rx="11" ry="3.2" fill="none" stroke="#e23b3b" strokeWidth="1.6" />
+                        <ellipse cx="24" cy="62" rx="10" ry="3" fill="none" stroke="#F3692B" strokeWidth="1.6" />
                         <path
                           d="M24 2.5c-9.4 0-17 7.5-17 16.8C7 32.2 24 56 24 56s17-23.8 17-36.7C41 10 33.4 2.5 24 2.5z"
-                          fill="#e53935"
+                          fill="#F3692B"
                         />
-                        <circle cx="24" cy="19.2" r="6.4" fill="#ffffff" />
+                        <circle cx="24" cy="19.2" r="6.2" fill="#ffffff" />
                       </svg>
                     </span>
                   </div>
-                );
-              })}
+                ))}
             </div>
           )}
           </div>

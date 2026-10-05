@@ -352,7 +352,7 @@
 .aw-network {
   position: relative;
   z-index: 20;
-  margin-top: -140px;
+  margin-top: -360px;
 }
 
 .aw-preloader {
@@ -455,53 +455,53 @@
 }
 
 .aw-request {
-  animation: aw-request 8.2s ease-in-out infinite both;
+  animation: aw-request 11s ease-in-out infinite both;
 }
 
 .aw-pin-pop {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .aw-request-card {
   display: inline-flex;
   align-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #ffffff;
-  padding: 5px 8px;
-  color: #172033;
-  font-size: 12px;
+  padding: 2px 6px;
+  color: #142660;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 8px 16px rgba(20, 24, 40, 0.18);
+  box-shadow: 0 4px 10px rgba(20, 38, 96, 0.16);
 }
 
 .aw-pin {
-  width: 58px;
-  height: 76px;
+  width: 22px;
+  height: 30px;
   overflow: visible;
-  filter: drop-shadow(0 8px 8px rgba(180, 30, 30, 0.32));
+  filter: drop-shadow(0 3px 4px rgba(243, 105, 43, 0.28));
 }
 
 @keyframes aw-request {
   0%,
-  8% {
+  12% {
     opacity: 0;
-    transform: translate(-50%, 6px);
+    transform: translate(-50%, 6px) scale(0.94);
   }
-  16%,
-  62% {
+  24%,
+  58% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, 0) scale(1);
   }
-  78%,
+  74%,
   100% {
     opacity: 0;
-    transform: translate(-50%, -6px);
+    transform: translate(-50%, -6px) scale(0.96);
   }
 }
 
