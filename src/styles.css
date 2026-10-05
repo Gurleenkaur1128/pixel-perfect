@@ -351,8 +351,8 @@
 
 .aw-network {
   position: relative;
-  z-index: 6;
-  margin-top: -2px;
+  z-index: 20;
+  margin-top: -140px;
 }
 
 .aw-preloader {
@@ -365,7 +365,7 @@
 .aw-preloader-veil {
   position: absolute;
   inset: 0;
-  background: #142660;
+  background: #ffffff;
   animation: aw-preloader-veil 2.4s linear forwards;
 }
 
@@ -383,17 +383,16 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #f5f7fb;
+  color: #142660;
   text-shadow:
-    0 0 12px rgba(245, 247, 251, 0.34),
-    0 0 32px rgba(45, 65, 154, 0.95),
-    0 0 64px rgba(45, 65, 154, 0.48);
+    0 0 18px rgba(45, 65, 154, 0.28),
+    0 0 36px rgba(45, 65, 154, 0.16);
   animation: aw-preloader-word 2.4s linear forwards;
 }
 
 .aw-preloader-truck {
   position: fixed;
-  top: 68%;
+  top: 56%;
   left: 0;
   z-index: 1;
   width: min(360px, 40vw);
@@ -459,29 +458,33 @@
   animation: aw-request 8.2s ease-in-out infinite both;
 }
 
+.aw-pin-pop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .aw-request-card {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(15, 23, 48, 0.82);
-  padding: 4px 9px 4px 6px;
-  color: #f5f7fb;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 5px 8px;
+  color: #172033;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: 0 8px 18px rgba(8, 12, 28, 0.28);
+  box-shadow: 0 8px 16px rgba(20, 24, 40, 0.18);
 }
 
-.aw-request-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: #f3692b;
-  box-shadow: 0 0 0 4px rgba(243, 105, 43, 0.22);
+.aw-pin {
+  width: 58px;
+  height: 76px;
+  overflow: visible;
+  filter: drop-shadow(0 8px 8px rgba(180, 30, 30, 0.32));
 }
 
 @keyframes aw-request {
@@ -490,12 +493,12 @@
     opacity: 0;
     transform: translate(-50%, 6px);
   }
-  14%,
-  28% {
+  16%,
+  62% {
     opacity: 1;
     transform: translate(-50%, 0);
   }
-  40%,
+  78%,
   100% {
     opacity: 0;
     transform: translate(-50%, -6px);
