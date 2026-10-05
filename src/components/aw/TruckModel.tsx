@@ -25,7 +25,7 @@ export function TruckModel({ poseRef }: { poseRef: RefObject<TruckPose> }) {
         import("three/examples/jsm/loaders/FBXLoader.js"),
       ]);
       if (cancelled) return;
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setClearColor(0x000000, 0);
       host!.appendChild(renderer.domElement);
