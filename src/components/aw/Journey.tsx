@@ -374,7 +374,6 @@ export function Journey() {
   const maskRef = useRef<SVGPathElement>(null);
   const laneLRef = useRef<SVGPathElement>(null);
   const laneRRef = useRef<SVGPathElement>(null);
-  const chevronRef = useRef<SVGGElement>(null);
   const spurRef = useRef<SVGPathElement>(null);
   const flatLRef = useRef<SVGLineElement>(null);
   const flatRRef = useRef<SVGLineElement>(null);
@@ -443,7 +442,6 @@ export function Journey() {
       let shiftX = 0;
       let preferY = h * 0.46;
       let scroll = 4800;
-      let chevron = { x: 0, y: 0, a: 0 };
       const services: StopPos[] = [];
       const steps: StopPos[] = [];
       let delivered: StopPos = { x: w / 2, y: h, t: 0.98, w: 180, side: "", enter: "y" };
@@ -572,12 +570,6 @@ export function Journey() {
           flatRRef.current.setAttribute("y1", String(yR));
           flatRRef.current.setAttribute("y2", String(yR));
         }
-
-        chevron = {
-          x: P0x + r * 0.48,
-          y: yCenter + r * 0.28,
-          a: (48 * Math.PI) / 180,
-        };
 
         shiftX = w / 2 - vertX;
         preferY = h * 0.46;
@@ -762,13 +754,6 @@ export function Journey() {
 
       if (laneLRef.current) laneLRef.current.setAttribute("d", offsetPath(road, roadW * 0.2));
       if (laneRRef.current) laneRRef.current.setAttribute("d", offsetPath(road, -roadW * 0.2));
-      if (chevronRef.current) {
-        chevronRef.current.setAttribute(
-          "transform",
-          `translate(${n(chevron.x)} ${n(chevron.y)}) rotate(${n((chevron.a * 180) / Math.PI)}) scale(2.8)`,
-        );
-        chevronRef.current.style.display = mode === "mobile" ? "none" : "";
-      }
       if (spurRef.current) spurRef.current.style.display = mode === "mobile" ? "none" : "";
       if (flatLRef.current) flatLRef.current.style.display = mode === "mobile" ? "none" : "";
       if (flatRRef.current) flatRRef.current.style.display = mode === "mobile" ? "none" : "";
@@ -883,7 +868,8 @@ export function Journey() {
       }
       const net = document.querySelector<HTMLElement>(".aw-network");
       if (net) {
-        net.style.marginTop = "0px";
+        const cover = mode === "mobile" ? 64 : Math.round(clamp(h * 0.4, 320, 440));
+        net.style.marginTop = `-${cover}px`;
         net.style.transform = "";
       }
     };
@@ -994,7 +980,7 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const form = geo.mode === "mobile" ? 1 : smoothstep(0.48, 0.58, journey);
+      const form = geo.mode === "mobile" ? 1 : smoothstep(0.4, 0.48, journey);
       const paintW =
         geo.mode === "mobile" || geo.baseH < 1 ? geo.roadW : geo.baseH + (geo.roadW - geo.baseH) * form;
       const pitch = geo.mode === "mobile" ? 1 : form;
@@ -1021,9 +1007,9 @@ export function Journey() {
         const follow = smoothstep(SERVICES_END, SERVICES_END + 0.05, journey);
         const vertical = smoothstep(TURN_DOWN, TURN_DOWN + 0.05, journey);
         const aimX = pinW * (0.58 - vertical * 0.14) - pt.x;
-        const yFollow = smoothstep(HORIZ_END - 0.04, HORIZ_END + 0.1, journey);
-        const intoNet = smoothstep(0.94, 1, journey);
-        const aimY = pinH * (0.46 + intoNet * 0.48) - (drawY + bob);
+        const yFollow = smoothstep(HORIZ_END - 0.04, HORIZ_END + 0.12, journey);
+        const intoNet = smoothstep(0.95, 1, journey);
+        const aimY = pinH * (0.5 + intoNet * 0.7) - (drawY + bob);
         const roadFloor = pinH - geo.yEnd;
         targetVX = aimX * follow;
         targetVY = Math.max(roadFloor, Math.min(0, aimY) * yFollow);
@@ -1035,9 +1021,12 @@ export function Journey() {
       if (truckRef.current) {
         const ride = (1 - pitch) * (paintW / 2);
         truckRef.current.style.transform = `translate3d(${pt.x}px, ${drawY + bob - ride}px, 0)`;
-        const netTop = document.querySelector(".aw-network")?.getBoundingClientRect().top ?? window.innerHeight + 40;
-        const truckTop = truckRef.current.getBoundingClientRect().top;
-        truckRef.current.style.opacity = truckTop > netTop - 24 ? "0" : "1";
+        const graphic = truckRef.current.querySelector("canvas")?.parentElement ?? truckRef.current;
+        const box = graphic.getBoundingClientRect();
+        const netTop = document.querySelector(".aw-network")?.getBoundingClientRect().top ?? window.innerHeight + 240;
+        const peek = netTop - box.top;
+        const fade = peek <= 0 ? 0 : peek >= 80 ? 1 : peek / 80;
+        truckRef.current.style.opacity = fade.toFixed(3);
       }
       if (shadowRef.current) {
         const wide = geo.truckW * (0.62 - pitch * 0.28);
@@ -1058,7 +1047,7 @@ export function Journey() {
       anim.revealed = Math.max(anim.revealed, drawn);
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
-      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.6, journey);
+      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.46, 0.52, journey);
       anim.lane = Math.max(anim.lane, laneFade);
       const roadVis = geo.mode === "mobile" ? 1 : smoothstep(0.3, 0.4, journey);
       const masked = roadRef.current?.parentElement;
@@ -1066,20 +1055,18 @@ export function Journey() {
       if (roadRef.current) roadRef.current.setAttribute("stroke-width", String(paintW));
       mask.setAttribute("stroke-width", String(paintW + 2));
       if (spurRef.current) spurRef.current.setAttribute("stroke-width", String(paintW));
-      anim.spur = Math.max(anim.spur, geo.mode === "mobile" ? 0 : journey >= HORIZ_END - 0.02 ? 1 : 0);
+      const spurFade = geo.mode === "mobile" ? 0 : smoothstep(HORIZ_END - 0.045, HORIZ_END + 0.03, journey);
+      anim.spur = Math.max(anim.spur, spurFade);
       const spurOp = anim.spur * roadVis;
       if (spurRef.current) spurRef.current.style.opacity = String(spurOp);
-      if (chevronRef.current && geo.mode !== "mobile") {
-        chevronRef.current.style.opacity = String(spurOp);
-      }
-      if (flatLRef.current) flatLRef.current.style.opacity = String(geo.mode === "mobile" ? 0 : 0.9 * spurOp);
-      if (flatRRef.current) flatRRef.current.style.opacity = String(geo.mode === "mobile" ? 0 : 0.9 * spurOp);
+      if (flatLRef.current) flatLRef.current.style.opacity = String(geo.mode === "mobile" ? 0 : 0.55 * spurOp * anim.lane);
+      if (flatRRef.current) flatRRef.current.style.opacity = String(geo.mode === "mobile" ? 0 : 0.55 * spurOp * anim.lane);
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * anim.lane);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * anim.lane);
 
       if (baseRef.current && geo.showBase) {
         anim.shaped = journey;
-        const handoff = geo.mode === "mobile" ? 0 : smoothstep(0.4, 0.48, journey);
+        const handoff = geo.mode === "mobile" ? 0 : smoothstep(0.34, 0.4, journey);
         const inset = Math.max(0, (geo.baseH - paintW) / 2);
         baseRef.current.style.top = `${geo.yEdge + inset}px`;
         baseRef.current.style.height = `${paintW}px`;
@@ -1149,7 +1136,7 @@ export function Journey() {
 
       const pointing = smoothstep(1.2, 1.5, Math.abs(anim.angle));
       const headIn =
-        geo.mode === "mobile" ? smoothstep(0.48, 0.58, revealJ) : pointing * smoothstep(TURN_DOWN - 0.02, TURN_DOWN + 0.04, revealJ);
+        geo.mode === "mobile" ? smoothstep(0.48, 0.64, revealJ) : pointing * smoothstep(TURN_DOWN - 0.04, TURN_DOWN + 0.08, revealJ);
       if (journeyHeadRef.current) {
         journeyHeadRef.current.style.opacity = String(headIn);
         journeyHeadRef.current.style.transform = `translateY(${(1 - headIn) * 16}px)`;
@@ -1268,20 +1255,6 @@ export function Journey() {
                 strokeLinecap="butt"
               />
             </g>
-            <g
-              ref={chevronRef}
-              fill="none"
-              stroke="white"
-              strokeWidth="1.6"
-              strokeOpacity="0.7"
-              strokeLinecap="round"
-              opacity="0"
-            >
-              <path d="M-54 -22 L-22 0 L-54 22" />
-              <path d="M-30 -20 L2 0 L-30 20" />
-              <path d="M-6 -17 L24 0 L-6 17" />
-              <path d="M16 -14 L42 0 L16 14" />
-            </g>
             <path ref={motionRef} fill="none" stroke="none" />
           </svg>
 
@@ -1345,8 +1318,8 @@ export function Journey() {
           className="pointer-events-none absolute z-[6] opacity-0 max-md:left-5 max-md:top-24 max-md:w-[min(18rem,78vw)]"
         >
           <p className="eyebrow text-route">Final mile</p>
-          <h3 className="display mt-3 text-[clamp(36px,3.2vw,56px)] leading-[0.9] tracking-[-0.03em] text-[#121418]">
-            <span className="text-[#b7bdc6]">Reliability</span>
+          <h3 className="display mt-3 text-[clamp(36px,3.2vw,56px)] leading-[0.9] tracking-[-0.03em] text-[#142660]">
+            Reliability
             <br />
             at every
             <br />
@@ -1408,7 +1381,7 @@ export function Journey() {
           </div>
           <div className="mt-14">
             <p className="eyebrow text-route">Final mile</p>
-            <h3 className="display mt-3 text-[clamp(28px,4vw,44px)] text-primary">
+            <h3 className="display mt-3 text-[clamp(28px,4vw,44px)] text-[#142660]">
               Reliability at every milestone
             </h3>
             <p className="mt-3 max-w-md text-[15px] leading-relaxed text-[#172033]/70">
