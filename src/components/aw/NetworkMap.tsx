@@ -196,9 +196,16 @@ export function NetworkMap() {
                       animationDelay: request.delay,
                     }}
                   >
-                    <span className="aw-request-card">
-                      <span className="aw-request-dot" />
-                      {request.label}
+                    <span className="aw-pin-pop">
+                      <span className="aw-request-card">{request.label}</span>
+                      <svg className="aw-pin" viewBox="0 0 48 68" aria-hidden="true">
+                        <ellipse cx="24" cy="62" rx="11" ry="3.2" fill="none" stroke="#e23b3b" strokeWidth="1.6" />
+                        <path
+                          d="M24 2.5c-9.4 0-17 7.5-17 16.8C7 32.2 24 56 24 56s17-23.8 17-36.7C41 10 33.4 2.5 24 2.5z"
+                          fill="#e53935"
+                        />
+                        <circle cx="24" cy="19.2" r="6.4" fill="#ffffff" />
+                      </svg>
                     </span>
                   </div>
                 );
