@@ -25,7 +25,7 @@ export function TruckModel({ poseRef }: { poseRef: RefObject<TruckPose> }) {
         import("three/examples/jsm/loaders/FBXLoader.js"),
       ]);
       if (cancelled) return;
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setClearColor(0x000000, 0);
       host!.appendChild(renderer.domElement);
@@ -66,7 +66,7 @@ export function TruckModel({ poseRef }: { poseRef: RefObject<TruckPose> }) {
         if (rig) {
           targetEuler.set(0, -pose.heading, 0);
           targetQuat.setFromEuler(targetEuler);
-          rig.quaternion.slerp(targetQuat, 0.1);
+          rig.quaternion.slerp(targetQuat, 0.38);
         }
         const spin = pose.distance * 0.08;
         for (const tire of tires) tire.obj.rotation[tire.axis] = tire.base + spin;
