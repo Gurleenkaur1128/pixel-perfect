@@ -45,23 +45,23 @@ const ROUTES = [
 
 const REQUEST_CYCLE = 11;
 const REQUESTS = [
-  { label: "New request", coord: [-122.33, 47.61] as [number, number], dx: 18, dy: -22 },
-  { label: "Pickup", coord: [-121.9, 37.48] as [number, number], dx: 16, dy: 18 },
-  { label: "Quote", coord: [-112.07, 33.45] as [number, number], dx: 14, dy: -20 },
-  { label: "Delivery", coord: [-104.99, 39.74] as [number, number], dx: -16, dy: 20 },
-  { label: "New request", coord: [-95.37, 29.76] as [number, number], dx: 16, dy: 16 },
-  { label: "Pickup", coord: [-93.27, 44.98] as [number, number], dx: -14, dy: -18 },
-  { label: "Route", coord: [-90.2, 38.63] as [number, number], dx: 14, dy: 16 },
-  { label: "Quote", coord: [-80.19, 25.76] as [number, number], dx: -14, dy: -16 },
-  { label: "Delivery", coord: [-71.06, 42.36] as [number, number], dx: -18, dy: 14 },
+  { label: "New request", coord: [-115.14, 36.17] as [number, number] },
+  { label: "Pickup", coord: [-111.89, 40.76] as [number, number] },
+  { label: "Quote", coord: [-106.65, 35.08] as [number, number] },
+  { label: "Delivery", coord: [-104.99, 39.74] as [number, number] },
+  { label: "New request", coord: [-97.52, 35.47] as [number, number] },
+  { label: "Pickup", coord: [-94.58, 39.1] as [number, number] },
+  { label: "Route", coord: [-90.05, 35.15] as [number, number] },
+  { label: "Quote", coord: [-86.16, 39.77] as [number, number] },
+  { label: "Delivery", coord: [-82.99, 39.96] as [number, number] },
 ].flatMap((request, i) => {
   const projected = projection(request.coord);
   if (!projected) return [];
   return [
     {
       label: request.label,
-      x: projected[0] + request.dx,
-      y: projected[1] + request.dy,
+      x: Math.min(800, Math.max(160, projected[0])),
+      y: Math.min(455, Math.max(155, projected[1])),
       delay: `${-((i * REQUEST_CYCLE) / 9)}s`,
     },
   ];
@@ -123,7 +123,7 @@ export function NetworkMap() {
             inView ? "scale-100" : "scale-[1.03]",
           )}
         >
-          <div className="relative">
+          <div className="relative overflow-hidden">
           <svg viewBox="0 0 975 610" className="mx-auto h-auto w-full max-h-[min(52vh,460px)]" role="img" aria-label="Map of the continental United States with American West delivery routes">
             <defs>
               <filter id="aw-route-glow" x="-30%" y="-30%" width="160%" height="160%">

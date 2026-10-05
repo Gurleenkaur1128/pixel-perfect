@@ -374,9 +374,6 @@ export function Journey() {
   const maskRef = useRef<SVGPathElement>(null);
   const laneLRef = useRef<SVGPathElement>(null);
   const laneRRef = useRef<SVGPathElement>(null);
-  const spurRef = useRef<SVGPathElement>(null);
-  const flatLRef = useRef<SVGLineElement>(null);
-  const flatRRef = useRef<SVGLineElement>(null);
   const baseRef = useRef<HTMLDivElement>(null);
   const truckRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
@@ -523,10 +520,10 @@ export function Journey() {
         roadW = clamp(h * 0.28, 220, 300);
         const yCenter = yEdge + baseH / 2;
 
-        // Straight run, then one quarter-turn down. A second road continues straight.
+        // A shorter straight run, then one quarter-turn down.
         const r = clamp(h * 0.42, 300, 420);
         const xStart = clamp(truckW * 0.2, 64, 140);
-        const P0x = xStart + w * 1.7;
+        const P0x = xStart + w * 1.28;
         const phiA = -Math.PI / 2;
         const C1x = P0x;
         const C1y = yCenter + r;
@@ -551,25 +548,6 @@ export function Journey() {
         const roadStartX = -40;
         roadD = `M ${n(roadStartX)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
         roadStartHint = { x: roadStartX, y: yCenter };
-
-        const spurX0 = P0x - roadW * 0.2;
-        const spurX1 = P0x + Math.max(w * 1.15, 980);
-        if (spurRef.current) {
-          spurRef.current.setAttribute("d", `M ${n(spurX0)} ${n(yCenter)} L ${n(spurX1)} ${n(yCenter)}`);
-          spurRef.current.setAttribute("stroke-width", String(roadW));
-        }
-        if (flatLRef.current && flatRRef.current) {
-          const yL = yCenter - roadW * 0.2;
-          const yR = yCenter + roadW * 0.2;
-          flatLRef.current.setAttribute("x1", String(spurX0 + 12));
-          flatLRef.current.setAttribute("x2", String(spurX1));
-          flatLRef.current.setAttribute("y1", String(yL));
-          flatLRef.current.setAttribute("y2", String(yL));
-          flatRRef.current.setAttribute("x1", String(spurX0 + 12));
-          flatRRef.current.setAttribute("x2", String(spurX1));
-          flatRRef.current.setAttribute("y1", String(yR));
-          flatRRef.current.setAttribute("y2", String(yR));
-        }
 
         shiftX = w / 2 - vertX;
         preferY = h * 0.46;
@@ -754,9 +732,6 @@ export function Journey() {
 
       if (laneLRef.current) laneLRef.current.setAttribute("d", offsetPath(road, roadW * 0.2));
       if (laneRRef.current) laneRRef.current.setAttribute("d", offsetPath(road, -roadW * 0.2));
-      if (spurRef.current) spurRef.current.style.display = mode === "mobile" ? "none" : "";
-      if (flatLRef.current) flatLRef.current.style.display = mode === "mobile" ? "none" : "";
-      if (flatRRef.current) flatRRef.current.style.display = mode === "mobile" ? "none" : "";
 
       const worldH = Math.max(h + 40, yEnd + 80, delivered.y + 140);
       const worldW = Math.max(w, vertX + w, w * 3.2);
@@ -1054,13 +1029,6 @@ export function Journey() {
       if (masked) masked.style.opacity = String(roadVis);
       if (roadRef.current) roadRef.current.setAttribute("stroke-width", String(paintW));
       mask.setAttribute("stroke-width", String(paintW + 2));
-      if (spurRef.current) spurRef.current.setAttribute("stroke-width", String(paintW));
-      const spurFade = geo.mode === "mobile" ? 0 : smoothstep(HORIZ_END - 0.045, HORIZ_END + 0.03, journey);
-      anim.spur = Math.max(anim.spur, spurFade);
-      const spurOp = anim.spur * roadVis;
-      if (spurRef.current) spurRef.current.style.opacity = String(spurOp);
-      if (flatLRef.current) flatLRef.current.style.opacity = String(geo.mode === "mobile" ? 0 : 0.55 * spurOp * anim.lane);
-      if (flatRRef.current) flatRRef.current.style.opacity = String(geo.mode === "mobile" ? 0 : 0.55 * spurOp * anim.lane);
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * anim.lane);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * anim.lane);
 
@@ -1082,7 +1050,10 @@ export function Journey() {
         list.forEach((el, i) => {
           if (revealJ >= Number(el.dataset["t"] ?? 1)) active = i;
         });
-        list.forEach((el, i) => syncStop(el, revealJ, i === active, "step"));
+        list.forEach((el, i) => {
+          syncStop(el, revealJ, i === active, "step");
+          el.dataset["glow"] = i === active ? "on" : "";
+        });
       };
       const serviceList = Array.from(pin.querySelectorAll<HTMLElement>("[data-kind='service']"));
       let activeService = -1;
@@ -1090,7 +1061,10 @@ export function Journey() {
         if (revealJ >= Number(el.dataset["t"] ?? 1)) activeService = i;
       });
       if (geo.mode === "mobile") {
-        serviceList.forEach((el, i) => syncStop(el, revealJ, i === activeService, "service"));
+        serviceList.forEach((el, i) => {
+          syncStop(el, revealJ, i === activeService, "service");
+          el.dataset["glow"] = i === activeService ? "on" : "";
+        });
       } else {
         const shiftEnd = Number(servicesLayerRef.current?.dataset["shiftEnd"] ?? 0);
         const shift = shiftEnd * clamp(revealJ / 0.32, 0, 1);
@@ -1102,6 +1076,16 @@ export function Journey() {
         };
         serviceList.forEach(slide);
         if (serviceLeadRef.current) slide(serviceLeadRef.current);
+        const truckX = truckRef.current?.getBoundingClientRect().left ?? -9999;
+        let reached = -1;
+        serviceList.forEach((el, i) => {
+          const box = el.getBoundingClientRect();
+          if (box.width < 8) return;
+          if (truckX >= box.left + box.width * 0.28) reached = i;
+        });
+        serviceList.forEach((el, i) => {
+          el.dataset["glow"] = i === reached ? "on" : "";
+        });
       }
       revealSteps();
       if (exitMaskRef.current) exitMaskRef.current.style.opacity = "0";
@@ -1213,23 +1197,6 @@ export function Journey() {
                 <path ref={maskRef} fill="none" stroke="white" strokeLinecap="butt" strokeLinejoin="round" />
               </mask>
             </defs>
-            <line
-              ref={flatLRef}
-              stroke="white"
-              strokeWidth="2.25"
-              strokeDasharray="18 20"
-              strokeLinecap="butt"
-              opacity="0"
-            />
-            <line
-              ref={flatRRef}
-              stroke="white"
-              strokeWidth="2.25"
-              strokeDasharray="18 20"
-              strokeLinecap="butt"
-              opacity="0"
-            />
-            <path ref={spurRef} fill="none" stroke={BASE} strokeLinecap="butt" opacity="0" />
             <g mask={`url(#aw-road-mask-${uid})`}>
               <path
                 ref={roadRef}
