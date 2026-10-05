@@ -81,7 +81,6 @@ const STEPS = [
 ];
 
 const BASE = "#0F1730";
-const ROAD = "#121418";
 const SIDE_RATIO = 1 / 3.4;
 const ROAD_LEAD = 140;
 /** Services row ends while the camera is still locked on the bottom band. */
@@ -522,8 +521,8 @@ export function Journey() {
         truckW = Math.min(truckW, (h - baseH - navClear - 16) / SIDE_RATIO, w * 0.52);
         if (mode === "desktop") truckW = clamp(truckW, 360, 440);
         yEdge = h - baseH;
-        // Thinner than the services band so the handoff reads as a road, not the band itself.
-        roadW = clamp(h * 0.3, 240, 320);
+        // Final road width. It starts as the full band and narrows into this.
+        roadW = clamp(h * 0.28, 220, 300);
         const yCenter = yEdge + baseH / 2;
 
         // Straight run, then one quarter-turn down. A second road continues straight.
@@ -995,7 +994,10 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.36, 0.46, journey);
+      const form = geo.mode === "mobile" ? 1 : smoothstep(0.48, 0.58, journey);
+      const paintW =
+        geo.mode === "mobile" || geo.baseH < 1 ? geo.roadW : geo.baseH + (geo.roadW - geo.baseH) * form;
+      const pitch = geo.mode === "mobile" ? 1 : form;
       const drawY = pt.y;
       const dist = u * geo.total;
       const bob = Math.sin(dist * 0.028) * 0.65;
@@ -1019,20 +1021,19 @@ export function Journey() {
         const follow = smoothstep(SERVICES_END, SERVICES_END + 0.05, journey);
         const vertical = smoothstep(TURN_DOWN, TURN_DOWN + 0.05, journey);
         const aimX = pinW * (0.58 - vertical * 0.14) - pt.x;
-        const lift = -pinH * 0.36 * smoothstep(0.4, 0.52, journey);
         const yFollow = smoothstep(HORIZ_END - 0.04, HORIZ_END + 0.1, journey);
         const intoNet = smoothstep(0.94, 1, journey);
         const aimY = pinH * (0.46 + intoNet * 0.48) - (drawY + bob);
         const roadFloor = pinH - geo.yEnd;
         targetVX = aimX * follow;
-        targetVY = Math.max(roadFloor, lift * (1 - yFollow) + Math.min(0, aimY) * yFollow);
+        targetVY = Math.max(roadFloor, Math.min(0, aimY) * yFollow);
       }
       anim.viewX = targetVX;
       anim.viewY = targetVY;
       scene.style.transform = `translate3d(${anim.viewX}px, ${anim.viewY}px, 0)`;
 
       if (truckRef.current) {
-        const ride = (1 - pitch) * (geo.baseH / 2);
+        const ride = (1 - pitch) * (paintW / 2);
         truckRef.current.style.transform = `translate3d(${pt.x}px, ${drawY + bob - ride}px, 0)`;
         const netTop = document.querySelector(".aw-network")?.getBoundingClientRect().top ?? window.innerHeight + 40;
         const truckTop = truckRef.current.getBoundingClientRect().top;
@@ -1057,11 +1058,14 @@ export function Journey() {
       anim.revealed = Math.max(anim.revealed, drawn);
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
-      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.36, 0.46, journey);
+      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.6, journey);
       anim.lane = Math.max(anim.lane, laneFade);
-      const roadVis = geo.mode === "mobile" ? 1 : smoothstep(0.36, 0.46, journey);
+      const roadVis = geo.mode === "mobile" ? 1 : smoothstep(0.3, 0.4, journey);
       const masked = roadRef.current?.parentElement;
       if (masked) masked.style.opacity = String(roadVis);
+      if (roadRef.current) roadRef.current.setAttribute("stroke-width", String(paintW));
+      mask.setAttribute("stroke-width", String(paintW + 2));
+      if (spurRef.current) spurRef.current.setAttribute("stroke-width", String(paintW));
       anim.spur = Math.max(anim.spur, geo.mode === "mobile" ? 0 : journey >= HORIZ_END - 0.02 ? 1 : 0);
       const spurOp = anim.spur * roadVis;
       if (spurRef.current) spurRef.current.style.opacity = String(spurOp);
@@ -1075,10 +1079,10 @@ export function Journey() {
 
       if (baseRef.current && geo.showBase) {
         anim.shaped = journey;
-        const handoff = geo.mode === "mobile" ? 0 : smoothstep(0.36, 0.46, journey);
-        const flushH = Math.max(geo.baseH, pinH - geo.yEdge + 8);
-        baseRef.current.style.top = `${geo.yEdge}px`;
-        baseRef.current.style.height = `${flushH}px`;
+        const handoff = geo.mode === "mobile" ? 0 : smoothstep(0.4, 0.48, journey);
+        const inset = Math.max(0, (geo.baseH - paintW) / 2);
+        baseRef.current.style.top = `${geo.yEdge + inset}px`;
+        baseRef.current.style.height = `${paintW}px`;
         baseRef.current.style.opacity = String(1 - handoff);
         baseRef.current.style.clipPath = "none";
       }
@@ -1238,12 +1242,12 @@ export function Journey() {
               strokeLinecap="butt"
               opacity="0"
             />
-            <path ref={spurRef} fill="none" stroke={ROAD} strokeLinecap="butt" opacity="0" />
+            <path ref={spurRef} fill="none" stroke={BASE} strokeLinecap="butt" opacity="0" />
             <g mask={`url(#aw-road-mask-${uid})`}>
               <path
                 ref={roadRef}
                 fill="none"
-                stroke={ROAD}
+                stroke={BASE}
                 strokeLinecap="butt"
                 strokeLinejoin="round"
               />
