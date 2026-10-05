@@ -459,6 +459,7 @@ export function Journey() {
       let yFirstStep = h;
       let yLastStep = h;
       let yStop = h;
+      let yTruckEnd = h;
       let yEnd = h;
       let frameY = 0;
 
@@ -546,13 +547,14 @@ export function Journey() {
         yJoin = arc2.p3.y;
         curveY = yJoin;
         turn1 = P1;
-        const stepGap = clamp(h * 0.82, 640, 920);
+        const stepGap = clamp(h * 0.52, 440, 580);
         yFirstStep = yJoin + Math.max(220, roadW * 0.85);
         frameY = 0;
         yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
         const extra = 420;
         yStop = yLastStep + extra;
-        yEnd = yStop + Math.round(h * 1.25);
+        yTruckEnd = yStop + Math.round(h * 0.45);
+        yEnd = yTruckEnd + Math.round(h * 1.2);
         const bend = `${cubicCmd(arc1)} ${cubicCmd(arc2)}`;
 
         motionD = `M ${n(xStart)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
@@ -625,8 +627,8 @@ export function Journey() {
           servicesLayerRef.current.dataset["shiftEnd"] = String(Math.round(w * 0.46 - last.x));
         }
 
-        const stepW = clamp(mode === "desktop" ? 360 : 300, 260, 420);
-        const headW = clamp(w * 0.32, 280, 440);
+        const stepW = clamp(mode === "desktop" ? 320 : 280, 240, 360);
+        const headW = clamp(w * 0.26, 240, 360);
         if (journeyHeadRef.current) {
           journeyHeadRef.current.style.left = "48px";
           journeyHeadRef.current.style.top = `${Math.round(h * 0.22)}px`;
@@ -659,7 +661,7 @@ export function Journey() {
           wm.style.opacity = "1";
         }
 
-        const gutter = 72;
+        const gutter = 56;
         const rightX = vertX + roadW / 2 + gutter;
         for (let i = 0; i < STEPS.length; i++) {
           const y = yFirstStep + i * stepGap;
@@ -719,7 +721,7 @@ export function Journey() {
         const uCard0 = after(arcAt(samples, vertX, yFirstStep), uSettle);
         const uCardN = after(arcAt(samples, vertX, yLastStep), uCard0);
         const uExtra = after(arcAt(samples, vertX, yStop), uCardN);
-        const uEnd = after(arcAt(samples, vertX, yEnd), uExtra);
+        const uEnd = after(arcAt(samples, vertX, yTruckEnd), uExtra);
         const uScreenRaw = arcAt(samples, w * 0.78, yEdge + roadW / 2);
         const uScreen = Math.min(uScreenRaw, Math.max(0.02, uFlat * 0.9));
         markers = [
@@ -763,7 +765,7 @@ export function Journey() {
       steps.forEach((pos, i) => {
         const earlier = steps[i - 1];
         const floor = mode === "mobile" ? 0.5 : MILE_START;
-        const prev = earlier ? earlier.t + 0.034 : floor;
+        const prev = earlier ? earlier.t + 0.012 : floor;
         const cap = mode === "mobile" ? 0.96 : 0.93;
         pos.t = clamp(Math.max(pos.t, prev), floor, cap);
       });
@@ -1027,10 +1029,11 @@ export function Journey() {
         targetVY = locked < 0 ? locked * follow : 0;
       } else if (journey >= SERVICES_END) {
         const follow = smoothstep(SERVICES_END, SERVICES_END + 0.05, journey);
-        const aimX = pinW * 0.58 - pt.x;
+        const vertical = smoothstep(TURN_DOWN, TURN_DOWN + 0.05, journey);
+        const aimX = pinW * (0.58 - vertical * 0.14) - pt.x;
         const yFollow = smoothstep(HORIZ_END - 0.02, HORIZ_END + 0.08, journey);
-        const aimY = pinH * 0.54 - (drawY + bob);
-        const roadFloor = pinH - (geo.yEnd + geo.roadW / 2);
+        const aimY = pinH * 0.5 - (drawY + bob);
+        const roadFloor = pinH - geo.yEnd;
         targetVX = aimX * follow;
         targetVY = Math.max(roadFloor, Math.min(0, aimY) * yFollow);
       }
@@ -1149,7 +1152,7 @@ export function Journey() {
 
       const pointing = smoothstep(1.2, 1.5, Math.abs(anim.angle));
       const headIn =
-        geo.mode === "mobile" ? smoothstep(0.48, 0.58, revealJ) : pointing * smoothstep(TURN_DOWN, 0.75, revealJ);
+        geo.mode === "mobile" ? smoothstep(0.48, 0.58, revealJ) : pointing * smoothstep(TURN_DOWN - 0.02, TURN_DOWN + 0.04, revealJ);
       if (journeyHeadRef.current) {
         journeyHeadRef.current.style.opacity = String(headIn);
         journeyHeadRef.current.style.transform = `translateY(${(1 - headIn) * 16}px)`;
@@ -1319,7 +1322,7 @@ export function Journey() {
               data-stop=""
               data-kind="step"
               data-state="off"
-              className="absolute z-[5] opacity-0 [&_h3]:!text-[clamp(26px,2vw,36px)] [&_h3]:!leading-[1.12] [&_p]:!mt-3 [&_p]:!text-[clamp(16px,1.2vw,19px)] [&_p]:!leading-relaxed [&_svg]:!h-9 [&_svg]:!w-9"
+              className="absolute z-[5] opacity-0 [&_h3]:!text-[clamp(28px,2.2vw,38px)] [&_h3]:!leading-[1.12] [&_p]:!mt-3 [&_p]:!text-[clamp(17px,1.25vw,20px)] [&_p]:!leading-relaxed [&_svg]:!h-10 [&_svg]:!w-10"
             >
               <StopCopy index={`0${i + 1}`} title={step.title} text={step.text} icon={step.icon} scale="mile" />
             </article>
