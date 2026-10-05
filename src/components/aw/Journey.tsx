@@ -503,7 +503,7 @@ export function Journey() {
       } else {
         const navClear = 78;
         baseH =
-          mode === "desktop" ? clamp(h * 0.44, 340, 460) : clamp(h * 0.52, 400, 540);
+          mode === "desktop" ? clamp(h * 0.62, 480, 600) : clamp(h * 0.56, 420, 560);
         const maxBase = h - navClear - truckH - 28;
         baseH = clamp(Math.min(baseH, maxBase), 180, baseH);
         truckW = Math.min(truckW, (h - baseH - navClear - 16) / SIDE_RATIO, w * 0.52);
@@ -591,22 +591,18 @@ export function Journey() {
         preferY = h * 0.5;
         scroll = Math.round(clamp(h * (mode === "tablet" ? 7.6 : 8.6), 6800, 9000));
 
-        const padX = clamp(w * 0.062, 72, 96);
-        const gapX = 68;
-        const gapY = h < 800 ? 40 : 44;
-        const gridW = w - padX * 2;
-        const cardW = (gridW - gapX * 2) / 3;
-        const gridLeft = (w - gridW) / 2;
-        const gridTop = yEdge + (h < 800 ? 16 : 28);
-        const rowH = mode === "tablet" ? 172 : h < 820 ? 138 : 156;
-        for (let i = 0; i < SERVICES.length; i++) {
-          const col = i % 3;
-          const row = Math.floor(i / 3);
+        const serviceW = clamp(w * 0.46, 320, 560);
+        const serviceX = clamp(w * 0.08, 48, 96);
+        const serviceTop = yEdge + 32;
+        const serviceBottom = h - 28;
+        const serviceCount = SERVICES.length;
+        const serviceStep = (serviceBottom - serviceTop) / Math.max(1, serviceCount);
+        for (let i = 0; i < serviceCount; i++) {
           services.push({
-            x: gridLeft + col * (cardW + gapX),
-            y: gridTop + row * (rowH + gapY),
-            t: 0.12 + i * 0.055,
-            w: cardW,
+            x: serviceX,
+            y: serviceTop + i * serviceStep,
+            t: 0.08 + i * 0.062,
+            w: serviceW,
             side: "",
             enter: "y",
           });
@@ -715,7 +711,7 @@ export function Journey() {
       steps.forEach((pos) => place(pos, "step"));
       services.forEach((pos, i) => {
         if (mode !== "mobile") {
-          pos.t = 0.06 + i * 0.068;
+          pos.t = 0.08 + i * 0.062;
           return;
         }
         const earlier = services[i - 1];
@@ -919,7 +915,7 @@ export function Journey() {
         });
       } else if (key === "past") {
         play(el, {
-          opacity: kind === "service" ? 0.62 : 1,
+          opacity: kind === "service" ? 0.42 : 1,
           x: 0,
           y: 0,
           scale: 1,
@@ -1228,7 +1224,7 @@ export function Journey() {
                 data-stop=""
                 data-kind="service"
                 data-state="off"
-                className="absolute text-white opacity-0"
+                className="absolute text-white opacity-0 [&_h3]:mt-1 [&_h3]:text-[17px] [&_h3]:leading-none [&_p]:mt-1 [&_p]:line-clamp-1 [&_p]:text-[13px] [&_p]:leading-tight"
               >
                 <StopCopy
                   index={`0${i + 1}`}
@@ -1325,7 +1321,7 @@ export function Journey() {
             alt="American West truck"
             className="mt-6 h-auto w-[min(420px,88vw)]"
           />
-          <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid max-w-xl gap-y-6">
             {SERVICES.map((service, i) => (
               <article key={service.title}>
                 <StopCopy
