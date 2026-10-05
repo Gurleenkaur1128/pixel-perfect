@@ -79,7 +79,7 @@ export function NetworkMap() {
   const { ref, inView } = useInView<HTMLDivElement>(0.2);
 
   return (
-    <section id="network" className="aw-network relative flex min-h-[100svh] flex-col justify-center overflow-hidden bg-navy py-16 text-on-navy lg:py-20">
+    <section id="network" className="aw-network relative flex min-h-[100svh] flex-col justify-start overflow-hidden bg-navy pb-16 pt-8 text-on-navy lg:pb-20 lg:pt-10">
       <div
         ref={ref}
         className={cn(
