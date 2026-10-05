@@ -8,8 +8,15 @@ export function Hero() {
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setStage(5);
+      return;
+    }
+    // The veil stays up until the loader truck has left. Copy starts as that exit finishes.
+    const lead = 2000;
     const timers = [150, 550, 900, 1250, 1650].map((ms, i) =>
-      window.setTimeout(() => setStage(i + 1), ms),
+      window.setTimeout(() => setStage(i + 1), lead + ms),
     );
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, []);

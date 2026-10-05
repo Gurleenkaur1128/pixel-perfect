@@ -509,22 +509,23 @@ export function Journey() {
         ];
       } else {
         const navClear = 78;
-        baseH = mode === "desktop" ? clamp(h * 0.4, 320, 380) : clamp(h * 0.38, 300, 360);
+        const band = clamp(h * 0.3, mode === "desktop" ? 250 : 230, mode === "desktop" ? 290 : 270);
+        baseH = band;
         const maxBase = h - navClear - truckH - 36;
-        baseH = clamp(Math.min(baseH, maxBase), 260, baseH);
+        baseH = clamp(Math.min(baseH, maxBase), 220, baseH);
         truckW = Math.min(truckW, (h - baseH - navClear - 16) / SIDE_RATIO, w * 0.52);
         if (mode === "desktop") truckW = clamp(truckW, 360, 440);
         yEdge = h - baseH;
-        roadW = clamp(Math.min(w, h) * 0.18, mode === "desktop" ? 190 : 160, mode === "desktop" ? 240 : 210);
-        const yCenter = yEdge;
+        // The roadway is the same body as the dark base, so the handoff does not resize it.
+        roadW = baseH;
+        const yCenter = yEdge + roadW / 2;
 
-        // A long sweep, a visible diagonal, then a tighter bend into the vertical road.
-        const sweep1 = (55 * Math.PI) / 180;
-        const r1 = clamp(h * 0.78, 620, 860);
-        const r2 = clamp(h * 0.32, 240, 340);
-        const bridge = clamp(h * 0.2, 150, 220);
+        // Fixed path: straight, a wide curve, then a smaller curve into the vertical road.
+        const sweep1 = (52 * Math.PI) / 180;
+        const r1 = clamp(h * 0.7, 560, 820);
+        const r2 = clamp(h * 0.5, 400, 560);
         const xStart = clamp(truckW * 0.2, 64, 140);
-        const P0x = clamp(w * 0.74, xStart + w * 0.48, w * 0.82);
+        const P0x = clamp(w * 0.7, xStart + w * 0.42, w * 0.78);
         const phiA = -Math.PI / 2;
         const phiB = phiA + sweep1;
         const C1x = P0x;
@@ -532,38 +533,36 @@ export function Journey() {
         const arc1 = ellipseCubic(C1x, C1y, r1, r1, phiA, phiB);
         const P0 = { x: P0x, y: yCenter };
         const P1 = arc1.p3;
-        const tangent = { x: Math.cos(sweep1), y: Math.sin(sweep1) };
-        const Q = { x: P1.x + tangent.x * bridge, y: P1.y + tangent.y * bridge };
-        const C2x = Q.x - r2 * Math.cos(phiB);
-        const C2y = Q.y - r2 * Math.sin(phiB);
+        const C2x = P1.x - r2 * Math.cos(phiB);
+        const C2y = P1.y - r2 * Math.sin(phiB);
         const arc2 = ellipseCubic(C2x, C2y, r2, r2, phiB, 0);
         vertX = arc2.p3.x;
         yJoin = arc2.p3.y;
         curveY = yJoin;
         turn1 = P1;
         const stepGap = clamp(h * 0.58, 460, 680);
-        yFirstStep = yJoin + Math.max(180, roadW * 0.95);
+        yFirstStep = yJoin + Math.max(180, roadW * 0.72);
         frameY = 0;
         yLastStep = yFirstStep + (STEPS.length - 1) * stepGap;
         const extra = 320;
         yStop = yLastStep + extra;
         yEnd = yStop + Math.round(h * 0.72);
-        const bend = `${cubicCmd(arc1)} L ${n(Q.x)} ${n(Q.y)} ${cubicCmd(arc2)}`;
+        const bend = `${cubicCmd(arc1)} ${cubicCmd(arc2)}`;
 
         motionD = `M ${n(xStart)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
-        const roadStartX = P0.x - 36;
+        const roadStartX = -40;
         roadD = `M ${n(roadStartX)} ${n(yCenter)} L ${n(P0.x)} ${n(P0.y)} ${bend} L ${n(vertX)} ${n(yEnd)}`;
         roadStartHint = { x: roadStartX, y: yCenter };
 
-        const armTop = yJoin - roadW * 0.95;
-        const armBot = yJoin - roadW * 0.08;
-        const fillet = roadW * 0.62;
+        const spurTop = yJoin - roadW / 2;
+        const spurBot = yJoin + roadW / 2;
+        const fillet = roadW * 0.46;
         const spurLeft = vertX - roadW * 0.08;
-        const spurRight = vertX + Math.max(w * 0.46, 460);
+        const spurRight = vertX + Math.max(w * 0.5, 520);
         if (spurRef.current) {
           spurRef.current.setAttribute(
             "d",
-            `M ${n(spurLeft)} ${n(armTop)} L ${n(spurRight)} ${n(armTop)} L ${n(spurRight)} ${n(armBot)} L ${n(spurLeft + fillet)} ${n(armBot)} Q ${n(spurLeft)} ${n(armBot)} ${n(spurLeft)} ${n(armBot + fillet)} Z`,
+            `M ${n(spurLeft)} ${n(spurTop)} L ${n(spurRight)} ${n(spurTop)} L ${n(spurRight)} ${n(spurBot)} L ${n(spurLeft + fillet)} ${n(spurBot)} Q ${n(spurLeft)} ${n(spurBot)} ${n(spurLeft)} ${n(spurBot + fillet)} Z`,
           );
         }
         if (flatLRef.current && flatRRef.current) {
@@ -580,38 +579,31 @@ export function Journey() {
         }
 
         chevron = {
-          x: spurLeft + fillet * 0.72,
-          y: armBot + fillet * 0.42,
-          a: (42 * Math.PI) / 180,
+          x: vertX + roadW * 0.22,
+          y: yJoin + roadW * 0.28,
+          a: (48 * Math.PI) / 180,
         };
 
         shiftX = w / 2 - vertX;
         preferY = h * 0.46;
         scroll = Math.round(clamp(h * (mode === "tablet" ? 8.4 : 9.4), 7400, 10400));
 
-        const padX = clamp(w * 0.055, 70, 100);
-        const colGap = clamp(w * 0.048, 64, 80);
-        const rowGap = clamp(baseH * 0.12, 38, 50);
-        const cols = 3;
-        const colW = (w - padX * 2 - colGap * (cols - 1)) / cols;
-        const rowStep = 98 + rowGap;
-        const gridH = rowStep + 98;
-        const gridTop = yEdge + Math.max(28, (baseH - gridH) / 2);
+        const cardW = clamp(w * 0.3, 280, 420);
+        const cardX = clamp((w - cardW) * 0.56, 96, w - cardW - 48);
+        const cardY = yEdge + clamp((baseH - 168) / 2, 36, 96);
         for (let i = 0; i < SERVICES.length; i++) {
-          const col = i % cols;
-          const row = Math.floor(i / cols);
           const zone = SERVICE_ZONES[i] ?? 0.7;
           services.push({
-            x: padX + col * (colW + colGap),
-            y: gridTop + row * rowStep,
+            x: cardX,
+            y: cardY,
             t: zone * HORIZ_END,
-            w: colW,
+            w: cardW,
             side: "",
             enter: "y",
           });
         }
 
-        const stepW = clamp(mode === "desktop" ? 240 : 210, 190, 260);
+        const stepW = clamp(mode === "desktop" ? 210 : 200, 176, 230);
         const centeredLeft = w / 2 - roadW / 2 - 44 - stepW;
         const headW = clamp(Math.min(250, centeredLeft - 72), 200, 260);
         if (journeyHeadRef.current) {
@@ -970,7 +962,7 @@ export function Journey() {
       const u = mapJourney(geo.markers, journey);
       const pt = atU(geo.samples, u);
 
-      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.44, 0.52, journey);
+      const pitch = geo.mode === "mobile" ? 1 : smoothstep(0.46, 0.54, journey);
       const drawY = pt.y;
       const dist = u * geo.total;
       const bob = Math.sin(dist * 0.028) * 0.65;
@@ -987,20 +979,16 @@ export function Journey() {
       let targetVY = 0;
       const onStraight = geo.mode !== "mobile" && journey < HORIZ_END;
       if (!onStraight) {
-        const pan = geo.mode === "mobile" ? 0 : smoothstep(HORIZ_END, 0.6, journey);
+        const pan = geo.mode === "mobile" ? 0 : smoothstep(HORIZ_END, TURN_DOWN, journey);
         targetVX = geo.shiftX * pan;
         if (geo.mode === "mobile") {
           const follow = smoothstep(0.02, 0.12, journey);
           const locked = geo.preferY - (drawY + bob);
           targetVY = locked < 0 ? locked * follow : 0;
-        } else if (geo.curveY > 0) {
-          const intoTurn = smoothstep(HORIZ_END, 0.58, journey);
-          const follow = smoothstep(0.68, 0.8, journey);
-          const hold = intoTurn * (1 - follow);
-          const turnAim = pinH * 0.7 - geo.curveY;
-          const followY = pinH * 0.56 - (drawY + bob);
-          targetVY = turnAim * hold + followY * follow;
-          if (targetVY > 0) targetVY = 0;
+        } else {
+          const follow = smoothstep(0.48, 0.66, journey);
+          const followY = pinH * 0.62 - (drawY + bob);
+          targetVY = Math.min(0, followY) * follow;
         }
       }
       anim.viewX = targetVX;
@@ -1008,7 +996,7 @@ export function Journey() {
       scene.style.transform = `translate3d(${anim.viewX}px, ${anim.viewY}px, 0)`;
 
       if (truckRef.current) {
-        const ride = (1 - pitch) * geo.truckW * SIDE_RATIO * 0.46;
+        const ride = (1 - pitch) * (geo.roadW / 2);
         truckRef.current.style.transform = `translate3d(${pt.x}px, ${drawY + bob - ride}px, 0)`;
         truckRef.current.style.opacity = "1";
       }
@@ -1025,69 +1013,94 @@ export function Journey() {
       const span = Math.max(0.0001, 1 - geo.roadStartU);
       const along = ((u - geo.roadStartU) / span) * geo.roadTotal;
       const nose = geo.truckW * (geo.mode === "mobile" ? 0.34 : 0.52);
-      const gate = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
-      const drawn = clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate;
+      const gate = geo.mode === "mobile" ? 1 : journey >= 0.46 ? 1 : 0;
+      const drawn =
+        geo.mode === "mobile" ? clamp(along + nose + geo.lead, 0, geo.roadTotal) * gate : geo.roadTotal * gate;
       anim.revealed = Math.max(anim.revealed, drawn);
-      if (geo.mode !== "mobile" && journey >= HORIZ_END) {
-        anim.revealed = Math.max(anim.revealed, geo.curveLen);
-      }
       mask.style.strokeDasharray = `${geo.roadTotal}`;
       mask.style.strokeDashoffset = `${Math.max(0, geo.roadTotal - anim.revealed)}`;
-      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.5, 0.58, journey);
+      const laneFade = geo.mode === "mobile" ? 1 : smoothstep(0.46, 0.54, journey);
       anim.lane = Math.max(anim.lane, laneFade);
-      const roadVis = geo.mode === "mobile" ? 1 : smoothstep(0.48, 0.56, journey);
+      const roadVis = geo.mode === "mobile" ? 1 : smoothstep(0.46, 0.54, journey);
       const masked = roadRef.current?.parentElement;
       if (masked) masked.style.opacity = String(roadVis);
-      anim.spur = Math.max(anim.spur, geo.mode === "mobile" ? 0 : journey >= 0.6 ? 1 : 0);
+      anim.spur = Math.max(anim.spur, geo.mode === "mobile" ? 0 : journey >= 0.46 ? 1 : 0);
       if (spurRef.current) spurRef.current.style.opacity = String(anim.spur * roadVis);
       if (chevronRef.current && geo.mode !== "mobile") {
         chevronRef.current.style.opacity = String(anim.spur * roadVis);
       }
-      const flat = smoothstep(0.48, 0.56, journey) * (1 - smoothstep(0.62, 0.72, journey));
-      if (flatLRef.current) flatLRef.current.style.opacity = String(0.55 * flat);
-      if (flatRRef.current) flatRRef.current.style.opacity = String(0.55 * flat);
+      if (flatLRef.current) flatLRef.current.style.opacity = "0";
+      if (flatRRef.current) flatRRef.current.style.opacity = "0";
       if (laneLRef.current) laneLRef.current.style.opacity = String(0.55 * anim.lane);
       if (laneRRef.current) laneRRef.current.style.opacity = String(0.55 * anim.lane);
 
       if (baseRef.current && geo.showBase) {
         anim.shaped = journey;
-        const shaped = journey;
-        const rise = smoothstep(0.42, 0.48, shaped);
-        const settle = smoothstep(0.44, 0.51, shaped);
-        const handoff = smoothstep(0.5, 0.58, shaped);
-        const retract = smoothstep(0.99, 1, shaped);
-        const clear = geo.truckW * SIDE_RATIO + 72;
-        const risenTop = geo.yEdge - clear;
-        const risenH = geo.baseH + clear;
-        const roadTop = geo.yEdge - geo.roadW / 2;
-        const topRise = geo.yEdge + (risenTop - geo.yEdge) * rise;
-        const heightRise = geo.baseH + (risenH - geo.baseH) * rise;
-        const top = topRise + (roadTop - topRise) * settle;
-        let height = heightRise + (geo.roadW - heightRise) * settle;
-        if (journey < 0.42) height = Math.max(height, pinH - anim.viewY - top + 8);
-        baseRef.current.style.top = `${top}px`;
-        const fullRight = geo.viewW * 2;
-        const rightEdge = fullRight + (geo.roadStartX + 40 - fullRight) * handoff;
-        const clipRight = Math.max(0, fullRight - rightEdge);
-        const clipLeft = retract * (geo.roadStartX + geo.viewW);
-        baseRef.current.style.height = `${height}px`;
-        baseRef.current.style.opacity = "1";
-        baseRef.current.style.clipPath =
-          retract > 0.98 ? "inset(0 0 0 100%)" : `inset(0 ${clipRight}px 0 ${clipLeft}px)`;
+        const handoff = geo.mode === "mobile" ? 0 : smoothstep(0.46, 0.54, journey);
+        const flushH = Math.max(geo.baseH, pinH - geo.yEdge + 8);
+        baseRef.current.style.top = `${geo.yEdge}px`;
+        baseRef.current.style.height = `${flushH}px`;
+        baseRef.current.style.opacity = String(1 - handoff);
+        baseRef.current.style.clipPath = "none";
       }
 
       anim.revealJ = journey;
       const revealJ = journey;
-      const reveal = (kind: "service" | "step") => {
-        const list = Array.from(pin.querySelectorAll<HTMLElement>(`[data-kind='${kind}']`));
+      const revealSteps = () => {
+        const list = Array.from(pin.querySelectorAll<HTMLElement>("[data-kind='step']"));
         let active = -1;
         list.forEach((el, i) => {
           if (revealJ >= Number(el.dataset["t"] ?? 1)) active = i;
         });
-        list.forEach((el, i) => syncStop(el, revealJ, i === active, kind));
+        list.forEach((el, i) => syncStop(el, revealJ, i === active, "step"));
       };
-      reveal("service");
-      reveal("step");
+      const serviceList = Array.from(pin.querySelectorAll<HTMLElement>("[data-kind='service']"));
+      let activeService = -1;
+      serviceList.forEach((el, i) => {
+        if (revealJ >= Number(el.dataset["t"] ?? 1)) activeService = i;
+      });
+      if (geo.mode === "mobile") {
+        serviceList.forEach((el, i) => syncStop(el, revealJ, i === activeService, "service"));
+      } else {
+        serviceList.forEach((el, i) => {
+          const role =
+            i > activeService
+              ? "off"
+              : i === activeService
+                ? "active"
+                : i === activeService - 1
+                  ? "prev"
+                  : "older";
+          if (el.dataset["state"] === role) return;
+          el.dataset["state"] = role;
+          el.style.zIndex = role === "active" ? "3" : role === "prev" ? "1" : "0";
+          const shift = -Math.round((el.offsetWidth || 320) * 0.92);
+          if (role === "active") {
+            play(el, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.92, ease: "power3.out", overwrite: "auto" });
+          } else if (role === "prev") {
+            play(el, {
+              opacity: 0.28,
+              x: shift,
+              y: 12,
+              scale: 0.78,
+              duration: 0.7,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          } else {
+            play(el, {
+              opacity: 0,
+              x: role === "older" ? shift : 0,
+              y: 24,
+              scale: 0.97,
+              duration: role === "older" ? 0.45 : 0.4,
+              ease: "power2.inOut",
+              overwrite: "auto",
+            });
+          }
+        });
+      }
+      revealSteps();
       if (exitMaskRef.current) exitMaskRef.current.style.opacity = "0";
       const deliveredEl = pin.querySelector<HTMLElement>("[data-kind='delivered']");
       if (deliveredEl) {
@@ -1102,7 +1115,7 @@ export function Journey() {
       }
 
       if (servicesLayerRef.current) {
-        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, revealJ) : smoothstep(0.46, 0.52, revealJ);
+        const leave = geo.mode === "mobile" ? smoothstep(0.48, 0.6, revealJ) : smoothstep(0.4, 0.47, revealJ);
         servicesLayerRef.current.style.opacity = geo.mode === "mobile" ? "1" : String(1 - leave);
       }
 
@@ -1262,7 +1275,7 @@ export function Journey() {
                 data-stop=""
                 data-kind="service"
                 data-state="off"
-                className="absolute text-white opacity-0 [&_h3]:mt-1 [&_h3]:text-[clamp(16px,1.25vw,20px)] [&_h3]:leading-tight [&_p]:mt-1.5 [&_p]:line-clamp-2 [&_p]:text-[13px] [&_p]:leading-snug"
+                className="absolute origin-left text-white opacity-0 [&_h3]:!mt-3 [&_h3]:!text-[clamp(28px,2.6vw,40px)] [&_h3]:!leading-[1.02] [&_p]:!mt-3 [&_p]:!max-w-[34ch] [&_p]:!text-[15px] [&_p]:!leading-relaxed [&_svg]:!h-5 [&_svg]:!w-5"
               >
                 <StopCopy
                   index={`0${i + 1}`}
@@ -1356,7 +1369,7 @@ export function Journey() {
             alt="American West truck"
             className="mt-6 h-auto w-[min(420px,88vw)]"
           />
-          <div className="mt-8 grid gap-x-16 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 flex max-w-xl flex-col gap-10">
             {SERVICES.map((service, i) => (
               <article key={service.title}>
                 <StopCopy
