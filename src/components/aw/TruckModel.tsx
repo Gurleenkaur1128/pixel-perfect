@@ -66,7 +66,7 @@ export function TruckModel({ poseRef }: { poseRef: RefObject<TruckPose> }) {
         if (rig) {
           targetEuler.set(0, -pose.heading, 0);
           targetQuat.setFromEuler(targetEuler);
-          rig.quaternion.slerp(targetQuat, 0.1);
+          rig.quaternion.slerp(targetQuat, 0.38);
         }
         const spin = pose.distance * 0.08;
         for (const tire of tires) tire.obj.rotation[tire.axis] = tire.base + spin;

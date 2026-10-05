@@ -323,16 +323,10 @@
   }
 }
 
-/* 1366px laptops stay in the 330–400 range. */
+/* Desktop truck crosses the services band large enough to read left, center, right. */
 @media (min-width: 1024px) {
   .aw-journey {
-    --truck-w: clamp(330px, 28vw, 400px);
-  }
-}
-
-@media (min-width: 1440px) {
-  .aw-journey {
-    --truck-w: clamp(400px, 30vw, 470px);
+    --truck-w: clamp(360px, 28vw, 440px);
   }
 }
 
