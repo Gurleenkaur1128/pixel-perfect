@@ -798,8 +798,8 @@ export function Journey() {
         el.dataset["t"] = pos.t.toFixed(4);
         if (mode !== "mobile" && el.dataset["kind"] === "service") {
           gsap.killTweensOf(el);
-          gsap.set(el, { opacity: 1, x: 0, y: 0, scale: 1 });
-          el.dataset["state"] = "on";
+          gsap.set(el, { opacity: 0, x: 0, y: 0, scale: 1 });
+          el.dataset["state"] = "off";
           return;
         }
         if (el.dataset["state"] === "off" || !el.dataset["state"]) {
@@ -1046,13 +1046,23 @@ export function Journey() {
       const revealJ = journey;
       const revealSteps = () => {
         const list = Array.from(pin.querySelectorAll<HTMLElement>("[data-kind='step']"));
-        let active = -1;
+        if (geo.mode === "mobile") {
+          let active = -1;
+          list.forEach((el, i) => {
+            if (revealJ >= Number(el.dataset["t"] ?? 1)) active = i;
+          });
+          list.forEach((el, i) => syncStop(el, revealJ, i === active, "step"));
+          return;
+        }
         list.forEach((el, i) => {
-          if (revealJ >= Number(el.dataset["t"] ?? 1)) active = i;
-        });
-        list.forEach((el, i) => {
-          syncStop(el, revealJ, i === active, "step");
-          el.dataset["glow"] = i === active ? "on" : "";
+          const t = Number(el.dataset["t"] ?? 1);
+          const earlier = list[i - 1];
+          const prev = earlier ? Number(earlier.dataset["t"] ?? t - 0.04) : t - 0.045;
+          const appear = smoothstep(prev + (t - prev) * 0.42, t + 0.012, revealJ);
+          gsap.killTweensOf(el);
+          el.style.opacity = String(appear);
+          el.style.transform = "translate3d(0, 0, 0)";
+          el.dataset["state"] = appear > 0.92 ? "on" : "off";
         });
       };
       const serviceList = Array.from(pin.querySelectorAll<HTMLElement>("[data-kind='service']"));
@@ -1061,31 +1071,32 @@ export function Journey() {
         if (revealJ >= Number(el.dataset["t"] ?? 1)) activeService = i;
       });
       if (geo.mode === "mobile") {
-        serviceList.forEach((el, i) => {
-          syncStop(el, revealJ, i === activeService, "service");
-          el.dataset["glow"] = i === activeService ? "on" : "";
-        });
+        serviceList.forEach((el, i) => syncStop(el, revealJ, i === activeService, "service"));
       } else {
         const shiftEnd = Number(servicesLayerRef.current?.dataset["shiftEnd"] ?? 0);
         const shift = shiftEnd * clamp(revealJ / 0.32, 0, 1);
-        const slide = (el: HTMLElement) => {
+        const pinW = pin.clientWidth || window.innerWidth;
+        const count = Math.max(1, serviceList.length);
+        serviceList.forEach((el, i) => {
+          const home = Number.parseFloat(el.style.left) || 0;
+          const width = Number.parseFloat(el.style.width) || 300;
+          const screenLeft = home + shift;
+          const entered = clamp((pinW - 24 - screenLeft) / (width * 0.72), 0, 1);
+          const start = 0.012 + (i / count) * 0.22;
+          const timed = smoothstep(start, start + 0.05, revealJ);
+          const appear = Math.min(entered, timed);
           gsap.killTweensOf(el);
-          el.dataset["state"] = "on";
-          el.style.opacity = "1";
+          el.dataset["state"] = appear > 0.9 ? "on" : "off";
+          el.style.opacity = String(appear);
           el.style.transform = `translate3d(${shift}px, 0, 0)`;
-        };
-        serviceList.forEach(slide);
-        if (serviceLeadRef.current) slide(serviceLeadRef.current);
-        const truckX = truckRef.current?.getBoundingClientRect().left ?? -9999;
-        let reached = -1;
-        serviceList.forEach((el, i) => {
-          const box = el.getBoundingClientRect();
-          if (box.width < 8) return;
-          if (truckX >= box.left + box.width * 0.28) reached = i;
         });
-        serviceList.forEach((el, i) => {
-          el.dataset["glow"] = i === reached ? "on" : "";
-        });
+        if (serviceLeadRef.current) {
+          const lead = serviceLeadRef.current;
+          gsap.killTweensOf(lead);
+          lead.dataset["state"] = "on";
+          lead.style.opacity = String(1 - smoothstep(0.1, 0.22, revealJ));
+          lead.style.transform = `translate3d(${shift}px, 0, 0)`;
+        }
       }
       revealSteps();
       if (exitMaskRef.current) exitMaskRef.current.style.opacity = "0";

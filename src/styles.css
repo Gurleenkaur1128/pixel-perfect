@@ -366,7 +366,7 @@
   position: absolute;
   inset: 0;
   background: #ffffff;
-  animation: aw-preloader-veil 5.6s linear forwards;
+  animation: aw-preloader-veil 4s linear forwards;
 }
 
 .aw-preloader-word {
@@ -384,7 +384,7 @@
   text-transform: uppercase;
   white-space: nowrap;
   color: #142660;
-  animation: aw-preloader-word 5.6s linear forwards;
+  animation: aw-preloader-word 4s linear forwards;
 }
 
 .aw-preloader-truck {
@@ -395,7 +395,7 @@
   width: min(360px, 40vw);
   height: auto;
   aspect-ratio: 2000 / 667;
-  animation: aw-preloader-truck 5.6s linear forwards;
+  animation: aw-preloader-truck 4s linear forwards;
 }
 
 @keyframes aw-preloader-truck {
@@ -403,15 +403,15 @@
     transform: translate3d(-120%, 0, 0);
     animation-timing-function: cubic-bezier(0.22, 0.7, 0.28, 1);
   }
-  /* 0.9s — centered under the title */
-  16%,
-  /* 3.4s — hold about 2.5s while the title glows */
-  61% {
+  /* 0.8s — centered under the title */
+  20%,
+  /* 1.7s — a short hold while the title glows */
+  42% {
     transform: translate3d(calc(50vw - 50%), 0, 0);
     animation-timing-function: cubic-bezier(0.4, 0.02, 0.18, 1);
   }
-  /* 5.2s — slow exit to the right */
-  93%,
+  /* 3.6s — leave to the right */
+  90%,
   100% {
     transform: translate3d(calc(100vw + 72px), 0, 0);
   }
@@ -428,8 +428,8 @@
     filter: blur(0);
     text-shadow: 0 0 0 rgba(45, 65, 154, 0);
   }
-  18%,
-  64% {
+  22%,
+  46% {
     opacity: 1;
     filter: blur(0);
     text-shadow:
@@ -437,7 +437,7 @@
       0 0 28px rgba(45, 65, 154, 0.5),
       0 0 52px rgba(243, 105, 43, 0.32);
   }
-  86% {
+  72% {
     opacity: 1;
     filter: blur(0);
     text-shadow:
@@ -453,30 +453,13 @@
 
 @keyframes aw-preloader-veil {
   0%,
-  84% {
+  70% {
     opacity: 1;
   }
-  97%,
+  92%,
   100% {
     opacity: 0;
   }
-}
-
-.aw-journey [data-kind="service"],
-.aw-journey [data-kind="step"] {
-  transition: filter 0.7s ease;
-}
-
-.aw-journey [data-kind="service"][data-glow="on"] {
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.75)) drop-shadow(0 0 18px rgba(243, 105, 43, 0.7));
-}
-
-.aw-journey [data-kind="step"][data-glow="on"] {
-  filter: drop-shadow(0 0 10px rgba(243, 105, 43, 0.95)) drop-shadow(0 0 22px rgba(243, 105, 43, 0.55));
-}
-
-.aw-journey [data-kind="step"][data-glow="on"] h3 {
-  text-shadow: 0 0 16px rgba(243, 105, 43, 0.8);
 }
 
 .aw-request {
