@@ -1,10 +1,41 @@
 import { AwButton, Logo } from "@/components/aw/ui";
 
 const COLUMNS = [
-  { title: "Services", links: ["B2B / LTL / Retail / Final Mile", "Blanket Wrap", "E-commerce and Home", "Pool Distribution", "Warehousing"] },
-  { title: "Company", links: ["About Us", "Our Family of Carriers", "The American West Way", "News & Events"] },
-  { title: "Resources", links: ["Schedule a Pickup", "Request a Quote", "FAQs"] },
-  { title: "Contact", links: ["51 Zaca Lane, Suite 120", "San Luis Obispo, CA 93401", "(800) 788-4534"] },
+  {
+    title: "Services",
+    links: [
+      { label: "B2B / LTL / Retail / Final Mile", href: "/services/b2b-ltl-retail-final-mile" },
+      { label: "Blanket Wrap", href: "/services/blanket-wrap" },
+      { label: "E-commerce and Home", href: "/services/ecommerce-home-delivery" },
+      { label: "Pool Distribution", href: "/services/pool-distribution" },
+      { label: "Warehousing", href: "/services/warehousing" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About Us", href: "/#top" },
+      { label: "Our Family of Carriers", href: "/#top" },
+      { label: "The American West Way", href: "/#top" },
+      { label: "News & Events", href: "/#top" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Schedule a Pickup", href: "/#top" },
+      { label: "Request a Quote", href: "#quote" },
+      { label: "FAQs", href: "/#top" },
+    ],
+  },
+  {
+    title: "Contact",
+    links: [
+      { label: "51 Zaca Lane, Suite 120", href: "#quote" },
+      { label: "San Luis Obispo, CA 93401", href: "#quote" },
+      { label: "(800) 788-4534", href: "tel:8007884534" },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -23,12 +54,12 @@ export function Footer() {
               <p className="eyebrow text-route">{col.title}</p>
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <a
-                      href={link === "Request a Quote" ? "#quote" : "#top"}
+                      href={link.href}
                       className="text-sm text-on-navy/65 transition-colors duration-500 hover:text-on-navy"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}
