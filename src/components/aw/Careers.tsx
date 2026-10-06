@@ -57,13 +57,10 @@ export function Careers() {
       });
       items.forEach((item, i) => {
         const focus = i === index ? 1 - frac : i === index + 1 ? frac : 0;
-        item.style.opacity = String(0.36 + focus * 0.64);
-        item.style.borderColor = `rgba(243, 105, 43, ${(0.12 + focus * 0.88).toFixed(3)})`;
+        item.style.opacity = String(0.38 + focus * 0.62);
+        item.style.borderColor = `rgba(243, 105, 43, ${(0.16 + focus * 0.84).toFixed(3)})`;
         const title = item.querySelector<HTMLElement>("h3");
-        if (title) {
-          title.style.textShadow =
-            focus > 0.04 ? `0 0 ${6 + focus * 16}px rgba(243, 105, 43, ${(0.15 + focus * 0.5).toFixed(3)})` : "none";
-        }
+        if (title) title.style.textShadow = "none";
         const copy = item.querySelector<HTMLElement>("p:last-of-type");
         if (copy) copy.style.opacity = String(0.55 + focus * 0.45);
       });
@@ -132,7 +129,7 @@ export function Careers() {
                   style={{ opacity: i === 0 ? 1 : 0.4, borderColor: i === 0 ? "#F3692B" : "rgba(20,38,96,0.15)" }}
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-route">{item.index}</p>
-                  <h3 className="display mt-1 text-[18px] text-[#142660]" style={{ textShadow: i === 0 ? "0 0 14px rgba(243, 105, 43, 0.45)" : "none" }}>{item.title}</h3>
+                  <h3 className="display mt-1 text-[18px] text-[#142660]">{item.title}</h3>
                   <p className="mt-2 max-w-md text-[15px] leading-relaxed text-[#172033]/75">{item.text}</p>
                 </li>
               ))}
